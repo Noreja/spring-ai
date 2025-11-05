@@ -44,13 +44,13 @@ import org.springframework.context.annotation.Bean;
  */
 @AutoConfiguration(after = Neo4jAutoConfiguration.class)
 @ConditionalOnClass({ Neo4jVectorStore.class, EmbeddingModel.class, Driver.class })
-@EnableConfigurationProperties({ Neo4jVectorStoreProperties.class })
+@EnableConfigurationProperties(Neo4jVectorStoreProperties.class)
 @ConditionalOnProperty(name = SpringAIVectorStoreTypes.TYPE, havingValue = SpringAIVectorStoreTypes.NEO4J,
 		matchIfMissing = true)
 public class Neo4jVectorStoreAutoConfiguration {
 
 	@Bean
-	@ConditionalOnMissingBean(BatchingStrategy.class)
+	@ConditionalOnMissingBean
 	BatchingStrategy batchingStrategy() {
 		return new TokenCountBatchingStrategy();
 	}
@@ -68,7 +68,8 @@ public class Neo4jVectorStoreAutoConfiguration {
 			.customObservationConvention(customObservationConvention.getIfAvailable(() -> null))
 			.batchingStrategy(batchingStrategy)
 			.databaseName(properties.getDatabaseName())
-			.embeddingDimension(properties.getEmbeddingDimension())
+			.embeddingDimension(properties.getEmbeddingDimension() != null ? properties.getEmbeddingDimension()
+					: embeddingModel.dimensions())
 			.distanceType(properties.getDistanceType())
 			.label(properties.getLabel())
 			.embeddingProperty(properties.getEmbeddingProperty())

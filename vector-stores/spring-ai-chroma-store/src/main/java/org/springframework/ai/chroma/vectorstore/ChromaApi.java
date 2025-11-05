@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.ai.chroma.vectorstore.ChromaApi.QueryRequest.Include;
 import org.springframework.ai.chroma.vectorstore.common.ChromaApiConstants;
+import org.springframework.ai.util.json.JsonParser;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.support.BasicAuthenticationInterceptor;
@@ -60,6 +61,8 @@ public class ChromaApi {
 
 	// Regular expression pattern that looks for a message.
 	private static final Pattern MESSAGE_ERROR_PATTERN = Pattern.compile("\"message\":\"(.*?)\"");
+
+	private static final String X_CHROMA_TOKEN_NAME = "x-chroma-token";
 
 	private final ObjectMapper objectMapper;
 
@@ -131,8 +134,7 @@ public class ChromaApi {
 				.uri("/api/v2/tenants/{tenant_name}", tenantName)
 				.headers(this::httpHeaders)
 				.retrieve()
-				.toEntity(Tenant.class)
-				.getBody();
+				.body(Tenant.class);
 		}
 		catch (HttpServerErrorException | HttpClientErrorException e) {
 			String msg = this.getErrorMessage(e);
@@ -161,8 +163,7 @@ public class ChromaApi {
 				.uri("/api/v2/tenants/{tenant_name}/databases/{database_name}", tenantName, databaseName)
 				.headers(this::httpHeaders)
 				.retrieve()
-				.toEntity(Database.class)
-				.getBody();
+				.body(Database.class);
 		}
 		catch (HttpServerErrorException | HttpClientErrorException e) {
 			String msg = this.getErrorMessage(e);
@@ -196,8 +197,7 @@ public class ChromaApi {
 			.headers(this::httpHeaders)
 			.body(createCollectionRequest)
 			.retrieve()
-			.toEntity(Collection.class)
-			.getBody();
+			.body(Collection.class);
 	}
 
 	/**
@@ -224,8 +224,7 @@ public class ChromaApi {
 						tenantName, databaseName, collectionName)
 				.headers(this::httpHeaders)
 				.retrieve()
-				.toEntity(Collection.class)
-				.getBody();
+				.body(Collection.class);
 		}
 		catch (HttpServerErrorException | HttpClientErrorException e) {
 			String msg = this.getErrorMessage(e);
@@ -243,8 +242,7 @@ public class ChromaApi {
 			.uri("/api/v2/tenants/{tenant_name}/databases/{database_name}/collections", tenantName, databaseName)
 			.headers(this::httpHeaders)
 			.retrieve()
-			.toEntity(CollectionList.class)
-			.getBody();
+			.body(CollectionList.class);
 	}
 
 	public void upsertEmbeddings(String tenantName, String databaseName, String collectionId,
@@ -280,8 +278,7 @@ public class ChromaApi {
 					tenantName, databaseName, collectionId)
 			.headers(this::httpHeaders)
 			.retrieve()
-			.toEntity(Long.class)
-			.getBody();
+			.body(Long.class);
 	}
 
 	@Nullable
@@ -294,8 +291,7 @@ public class ChromaApi {
 			.headers(this::httpHeaders)
 			.body(queryRequest)
 			.retrieve()
-			.toEntity(QueryResponse.class)
-			.getBody();
+			.body(QueryResponse.class);
 	}
 
 	//
@@ -311,8 +307,7 @@ public class ChromaApi {
 			.headers(this::httpHeaders)
 			.body(getEmbeddingsRequest)
 			.retrieve()
-			.toEntity(GetEmbeddingResponse.class)
-			.getBody();
+			.body(GetEmbeddingResponse.class);
 	}
 
 	// Utils
@@ -327,7 +322,7 @@ public class ChromaApi {
 
 	private void httpHeaders(HttpHeaders headers) {
 		if (StringUtils.hasText(this.keyToken)) {
-			headers.setBearerAuth(this.keyToken);
+			headers.set(X_CHROMA_TOKEN_NAME, this.keyToken);
 		}
 	}
 
@@ -443,7 +438,27 @@ public class ChromaApi {
 			@JsonProperty("metadatas") List<Map<String, Object>> metadata,
 			@JsonProperty("documents") List<String> documents) { // @formatter:on
 
-		// Convenance for adding a single embedding.
+		public AddEmbeddingsRequest {
+			// Process metadata to ensure all values are Integer, Boolean, or String.
+			// Other types are converted to JSON string using JsonParser.toJson().
+			List<Map<String, Object>> processedMetadatas = new ArrayList<>();
+			for (Map<String, Object> meta : metadata) {
+				Map<String, Object> processed = new HashMap<>();
+				for (Map.Entry<String, Object> entry : meta.entrySet()) {
+					Object value = entry.getValue();
+					if (value instanceof Number || value instanceof Boolean || value instanceof String) {
+						processed.put(entry.getKey(), value);
+					}
+					else {
+						processed.put(entry.getKey(), JsonParser.toJson(value));
+					}
+				}
+				processedMetadatas.add(processed);
+			}
+			metadata = processedMetadatas;
+		}
+
+		// Convenience for adding a single embedding.
 		public AddEmbeddingsRequest(String id, float[] embedding, Map<String, Object> metadata, String document) {
 			this(List.of(id), List.of(embedding), List.of(metadata), List.of(document));
 		}
@@ -607,7 +622,7 @@ public class ChromaApi {
 
 	}
 
-	public static class Builder {
+	public static final class Builder {
 
 		private String baseUrl = ChromaApiConstants.DEFAULT_BASE_URL;
 

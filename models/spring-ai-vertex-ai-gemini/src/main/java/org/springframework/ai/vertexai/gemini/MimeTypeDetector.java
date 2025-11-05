@@ -55,14 +55,15 @@ public abstract class MimeTypeDetector {
 	/**
 	 * List of all MIME types supported by the Vertex Gemini API.
 	 */
-	private static final Map<String, MimeType> GEMINI_MIME_TYPES = new HashMap<>();
+	// exposed for testing purposes
+	static final Map<String, MimeType> GEMINI_MIME_TYPES = new HashMap<>();
 
 	public static MimeType getMimeType(URL url) {
-		return getMimeType(url.getFile());
+		return getMimeType(url.getPath());
 	}
 
 	public static MimeType getMimeType(URI uri) {
-		return getMimeType(uri.toString());
+		return getMimeType(uri.getPath());
 	}
 
 	public static MimeType getMimeType(File file) {
@@ -70,7 +71,7 @@ public abstract class MimeTypeDetector {
 	}
 
 	public static MimeType getMimeType(Path path) {
-		return getMimeType(path.getFileName());
+		return getMimeType(path.toUri());
 	}
 
 	public static MimeType getMimeType(Resource resource) {

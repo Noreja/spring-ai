@@ -82,7 +82,7 @@ public class ChromaVectorStoreAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnMissingBean(BatchingStrategy.class)
+	@ConditionalOnMissingBean
 	BatchingStrategy chromaBatchingStrategy() {
 		return new TokenCountBatchingStrategy();
 	}
@@ -95,6 +95,8 @@ public class ChromaVectorStoreAutoConfiguration {
 			BatchingStrategy chromaBatchingStrategy) {
 		return ChromaVectorStore.builder(chromaApi, embeddingModel)
 			.collectionName(storeProperties.getCollectionName())
+			.databaseName(storeProperties.getDatabaseName())
+			.tenantName(storeProperties.getTenantName())
 			.initializeSchema(storeProperties.isInitializeSchema())
 			.observationRegistry(observationRegistry.getIfUnique(() -> ObservationRegistry.NOOP))
 			.customObservationConvention(customObservationConvention.getIfAvailable(() -> null))

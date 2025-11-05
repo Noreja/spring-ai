@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.mapping.DenseVectorSimilarity;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.BulkResponse;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
@@ -35,8 +36,6 @@ import co.elastic.clients.transport.rest_client.RestClientTransport;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.elasticsearch.client.RestClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.springframework.ai.document.Document;
 import org.springframework.ai.document.DocumentMetadata;
@@ -147,8 +146,6 @@ import org.springframework.util.Assert;
  */
 public class ElasticsearchVectorStore extends AbstractObservationVectorStore implements InitializingBean {
 
-	private static final Logger logger = LoggerFactory.getLogger(ElasticsearchVectorStore.class);
-
 	private static final Map<SimilarityFunction, VectorStoreSimilarityMetric> SIMILARITY_TYPE_MAPPING = Map.of(
 			SimilarityFunction.cosine, VectorStoreSimilarityMetric.COSINE, SimilarityFunction.l2_norm,
 			VectorStoreSimilarityMetric.EUCLIDEAN, SimilarityFunction.dot_product, VectorStoreSimilarityMetric.DOT);
@@ -179,11 +176,6 @@ public class ElasticsearchVectorStore extends AbstractObservationVectorStore imp
 
 	@Override
 	public void doAdd(List<Document> documents) {
-		// For the index to be present, either it must be pre-created or set the
-		// initializeSchema to true.
-		if (!indexExists()) {
-			throw new IllegalArgumentException("Index not found");
-		}
 		BulkRequest.Builder bulkRequestBuilder = new BulkRequest.Builder();
 
 		List<float[]> embeddings = this.embeddingModel.embed(documents, EmbeddingOptionsBuilder.builder().build(),
@@ -217,11 +209,6 @@ public class ElasticsearchVectorStore extends AbstractObservationVectorStore imp
 	@Override
 	public void doDelete(List<String> idList) {
 		BulkRequest.Builder bulkRequestBuilder = new BulkRequest.Builder();
-		// For the index to be present, either it must be pre-created or set the
-		// initializeSchema to true.
-		if (!indexExists()) {
-			throw new IllegalArgumentException("Index not found");
-		}
 		for (String id : idList) {
 			bulkRequestBuilder.operations(op -> op.delete(idx -> idx.index(this.options.getIndexName()).id(id)));
 		}
@@ -232,12 +219,6 @@ public class ElasticsearchVectorStore extends AbstractObservationVectorStore imp
 
 	@Override
 	public void doDelete(Filter.Expression filterExpression) {
-		// For the index to be present, either it must be pre-created or set the
-		// initializeSchema to true.
-		if (!indexExists()) {
-			throw new IllegalArgumentException("Index not found");
-		}
-
 		try {
 			this.elasticsearchClient.deleteByQuery(d -> d.index(this.options.getIndexName())
 				.query(q -> q.queryString(qs -> qs.query(getElasticsearchQueryString(filterExpression)))));
@@ -304,17 +285,16 @@ public class ElasticsearchVectorStore extends AbstractObservationVectorStore imp
 	// more info on score/distance calculation
 	// https://www.elastic.co/guide/en/elasticsearch/reference/current/knn-search.html#knn-similarity-search
 	private double normalizeSimilarityScore(double score) {
-		switch (this.options.getSimilarity()) {
-			case l2_norm:
+		return switch (this.options.getSimilarity()) {
+			case l2_norm ->
 				// the returned value of l2_norm is the opposite of the other functions
 				// (closest to zero means more accurate), so to make it consistent
 				// with the other functions the reverse is returned applying a "1-"
 				// to the standard transformation
-				return (1 - (java.lang.Math.sqrt((1 / score) - 1)));
+				(1 - (Math.sqrt((1 / score) - 1)));
 			// cosine and dot_product
-			default:
-				return (2 * score) - 1;
-		}
+			default -> (2 * score) - 1;
+		};
 	}
 
 	public boolean indexExists() {
@@ -330,23 +310,37 @@ public class ElasticsearchVectorStore extends AbstractObservationVectorStore imp
 		try {
 			this.elasticsearchClient.indices()
 				.create(cr -> cr.index(this.options.getIndexName())
-					.mappings(map -> map.properties(this.options.getEmbeddingFieldName(),
-							p -> p.denseVector(dv -> dv.similarity(this.options.getSimilarity().toString())
-								.dims(this.options.getDimensions())))));
+					.mappings(
+							map -> map.properties(this.options.getEmbeddingFieldName(),
+									p -> p.denseVector(dv -> dv
+										.similarity(parseSimilarity(this.options.getSimilarity().toString()))
+										.dims(this.options.getDimensions())))));
 		}
 		catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
+	private DenseVectorSimilarity parseSimilarity(String similarity) {
+		for (DenseVectorSimilarity sim : DenseVectorSimilarity.values()) {
+			if (sim.jsonValue().equalsIgnoreCase(similarity)) {
+				return sim;
+			}
+		}
+		throw new IllegalArgumentException("Unsupported similarity: " + similarity);
+	}
+
 	@Override
 	public void afterPropertiesSet() {
-		if (!this.initializeSchema) {
+		// For the index to be present, either it must be pre-created or set the
+		// initializeSchema to true.
+		if (indexExists()) {
 			return;
 		}
-		if (!indexExists()) {
-			createIndexMapping();
+		if (!this.initializeSchema) {
+			throw new IllegalArgumentException("Index not found");
 		}
+		createIndexMapping();
 	}
 
 	@Override
