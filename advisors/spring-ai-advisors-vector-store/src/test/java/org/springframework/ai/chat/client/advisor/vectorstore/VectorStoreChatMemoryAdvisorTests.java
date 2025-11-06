@@ -105,7 +105,7 @@ class VectorStoreChatMemoryAdvisorTests {
 	void whenCustomFilterExpressionIsNullThenDoNotThrow() {
 		VectorStore vectorStore = Mockito.mock(VectorStore.class);
 		assertThatNoException()
-				.isThrownBy(() -> VectorStoreChatMemoryAdvisor.builder(vectorStore).customFilterExpression(null).build());
+			.isThrownBy(() -> VectorStoreChatMemoryAdvisor.builder(vectorStore).customFilterExpression(null).build());
 	}
 
 	@Test
@@ -113,8 +113,8 @@ class VectorStoreChatMemoryAdvisorTests {
 		VectorStore vectorStore = Mockito.mock(VectorStore.class);
 
 		assertThatThrownBy(() -> VectorStoreChatMemoryAdvisor.builder(vectorStore).customMetaData(null).build())
-				.isInstanceOf(IllegalArgumentException.class)
-				.hasMessageContaining("customMetaData cannot be null");
+			.isInstanceOf(IllegalArgumentException.class)
+			.hasMessageContaining("customMetaData cannot be null");
 	}
 
 	@Test
@@ -122,42 +122,27 @@ class VectorStoreChatMemoryAdvisorTests {
 		VectorStore vectorStore = Mockito.mock(VectorStore.class);
 		var key = "CustomKey";
 		var value = "CustomValue";
-		var advisor = VectorStoreChatMemoryAdvisor
-				.builder(vectorStore)
-				.customMetaData(Map.of(key, value))
-				.build();
+		var advisor = VectorStoreChatMemoryAdvisor.builder(vectorStore).customMetaData(Map.of(key, value)).build();
 
 		var advisorChain = Mockito.mock(AdvisorChain.class);
-		var request = ChatClientRequest
-				.builder()
-				.prompt(Prompt.builder()
-						.content("Some content")
-						.build())
-				.build();
+		var request = ChatClientRequest.builder().prompt(Prompt.builder().content("Some content").build()).build();
 
 		advisor.before(request, advisorChain);
 
 		// then: capture every batch of Documents written and assert metadata
 		@SuppressWarnings("unchecked")
-		ArgumentCaptor<List<Document>> docsCaptor =
-				ArgumentCaptor.forClass(List.class);
+		ArgumentCaptor<List<Document>> docsCaptor = ArgumentCaptor.forClass(List.class);
 
 		verify(vectorStore, atLeastOnce()).write(docsCaptor.capture());
 
-		List<Document> allDocs = docsCaptor.getAllValues().stream()
-				.flatMap(Collection::stream)
-				.toList();
+		List<Document> allDocs = docsCaptor.getAllValues().stream().flatMap(Collection::stream).toList();
 
-		assertThat(allDocs)
-				.as("VectorStore.write should receive at least one Document")
-				.isNotEmpty();
+		assertThat(allDocs).as("VectorStore.write should receive at least one Document").isNotEmpty();
 
-		assertThat(allDocs)
-				.allSatisfy(doc -> {
-					Map<String, Object> meta = doc.getMetadata();
-					assertThat(meta)
-							.as("Document metadata should contain the custom key")
-							.containsEntry(key, value);
-				});
+		assertThat(allDocs).allSatisfy(doc -> {
+			Map<String, Object> meta = doc.getMetadata();
+			assertThat(meta).as("Document metadata should contain the custom key").containsEntry(key, value);
+		});
 	}
+
 }

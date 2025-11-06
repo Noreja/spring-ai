@@ -94,8 +94,8 @@ public final class VectorStoreChatMemoryAdvisor implements BaseChatMemoryAdvisor
 	private final Filter.Expression customFilterExpression;
 
 	private VectorStoreChatMemoryAdvisor(PromptTemplate systemPromptTemplate, int defaultTopK,
-			String defaultConversationId, int order, Scheduler scheduler, VectorStore vectorStore, Map<String, String> customMetaData,
-								  @Nullable Filter.Expression customFilterExpression) {
+			String defaultConversationId, int order, Scheduler scheduler, VectorStore vectorStore,
+			Map<String, String> customMetaData, @Nullable Filter.Expression customFilterExpression) {
 		Assert.notNull(systemPromptTemplate, "systemPromptTemplate cannot be null");
 		Assert.isTrue(defaultTopK > 0, "topK must be greater than 0");
 		Assert.hasText(defaultConversationId, "defaultConversationId cannot be null or empty");
@@ -334,9 +334,9 @@ public final class VectorStoreChatMemoryAdvisor implements BaseChatMemoryAdvisor
 		 */
 		public VectorStoreChatMemoryAdvisor build() {
 			return new VectorStoreChatMemoryAdvisor(this.systemPromptTemplate, this.defaultTopK, this.conversationId,
-					this.order, this.scheduler, this.vectorStore, customMetaData,
-					customFilterExpression);
+					this.order, this.scheduler, this.vectorStore, customMetaData, customFilterExpression);
 		}
+
 	}
 
 }
