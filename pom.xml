@@ -21,7 +21,7 @@
 
 	<groupId>org.springframework.ai</groupId>
 	<artifactId>spring-ai-parent</artifactId>
-	<version>1.0.3</version>
+	<version>1.0.3-noreja</version>
 
 	<packaging>pom</packaging>
 	<url>https://github.com/spring-projects/spring-ai</url>
@@ -229,12 +229,25 @@
 	</ciManagement>
 	<distributionManagement>
 		<snapshotRepository>
-			<id>spring-snapshots</id>
-			<url>https://repo.spring.io/libs-snapshot-local</url>
+			<id>noreja-snapshots</id>
+			<url>https://mrm.noreja.com/snapshots</url>
 			<releases>
 				<enabled>false</enabled>
 			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
 		</snapshotRepository>
+		<repository>
+			<id>noreja-releases</id>
+			<url>https://mrm.noreja.com/releases</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
 	</distributionManagement>
 	<licenses>
 		<license>

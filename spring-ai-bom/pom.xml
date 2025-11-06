@@ -51,16 +51,24 @@
 	</ciManagement>
 	<distributionManagement>
 		<snapshotRepository>
-			<id>spring-snapshots</id>
-			<url>https://repo.spring.io/libs-snapshot-local</url>
+			<id>noreja-snapshots</id>
+			<url>https://mrm.noreja.com/snapshots</url>
 			<releases>
 				<enabled>false</enabled>
 			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
 		</snapshotRepository>
 		<repository>
-			<id>repo.spring.io</id>
-			<name>Spring Release Repository</name>
-			<url>https://repo.spring.io/libs-release-local</url>
+			<id>noreja-releases</id>
+			<url>https://mrm.noreja.com/releases</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
 		</repository>
 	</distributionManagement>
 	<licenses>
