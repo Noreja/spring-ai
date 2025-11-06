@@ -17,11 +17,21 @@
 package org.springframework.ai.chat.client.advisor.vectorstore;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-
+import org.springframework.ai.chat.client.ChatClientRequest;
+import org.springframework.ai.chat.client.advisor.api.AdvisorChain;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.verify;
 
 /**
  * Unit tests for {@link VectorStoreChatMemoryAdvisor}.
@@ -89,6 +99,50 @@ class VectorStoreChatMemoryAdvisorTests {
 		assertThatThrownBy(() -> VectorStoreChatMemoryAdvisor.builder(vectorStore).defaultTopK(-1).build())
 			.isInstanceOf(IllegalArgumentException.class)
 			.hasMessageContaining("topK must be greater than 0");
+	}
+
+	@Test
+	void whenCustomFilterExpressionIsNullThenDoNotThrow() {
+		VectorStore vectorStore = Mockito.mock(VectorStore.class);
+		assertThatNoException()
+			.isThrownBy(() -> VectorStoreChatMemoryAdvisor.builder(vectorStore).customFilterExpression(null).build());
+	}
+
+	@Test
+	void whenCustomMetaDataIsNullThenThrow() {
+		VectorStore vectorStore = Mockito.mock(VectorStore.class);
+
+		assertThatThrownBy(() -> VectorStoreChatMemoryAdvisor.builder(vectorStore).customMetaData(null).build())
+			.isInstanceOf(IllegalArgumentException.class)
+			.hasMessageContaining("customMetaData cannot be null");
+	}
+
+	@Test
+	void whenCustomMetaDataIsAppliedThenDocumentContainsCustomMetaData() {
+		VectorStore vectorStore = Mockito.mock(VectorStore.class);
+		var key = "CustomKey";
+		var value = "CustomValue";
+		var advisor = VectorStoreChatMemoryAdvisor.builder(vectorStore).customMetaData(Map.of(key, value)).build();
+
+		var advisorChain = Mockito.mock(AdvisorChain.class);
+		var request = ChatClientRequest.builder().prompt(Prompt.builder().content("Some content").build()).build();
+
+		advisor.before(request, advisorChain);
+
+		// then: capture every batch of Documents written and assert metadata
+		@SuppressWarnings("unchecked")
+		ArgumentCaptor<List<Document>> docsCaptor = ArgumentCaptor.forClass(List.class);
+
+		verify(vectorStore, atLeastOnce()).write(docsCaptor.capture());
+
+		List<Document> allDocs = docsCaptor.getAllValues().stream().flatMap(Collection::stream).toList();
+
+		assertThat(allDocs).as("VectorStore.write should receive at least one Document").isNotEmpty();
+
+		assertThat(allDocs).allSatisfy(doc -> {
+			Map<String, Object> meta = doc.getMetadata();
+			assertThat(meta).as("Document metadata should contain the custom key").containsEntry(key, value);
+		});
 	}
 
 }
