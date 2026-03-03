@@ -51,24 +51,12 @@
 	</ciManagement>
 	<distributionManagement>
 		<snapshotRepository>
-			<id>noreja-snapshots</id>
-			<url>https://mrm.noreja.com/snapshots</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
+			<id>artifact-snapshot-registry</id>
+			<url>artifactregistry://europe-west3-maven.pkg.dev/theta-citron-479412-e0/noreja-maven-snapshots</url>
 		</snapshotRepository>
 		<repository>
-			<id>noreja-releases</id>
-			<url>https://mrm.noreja.com/releases</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
+			<id>artifact-registry</id>
+			<url>artifactregistry://europe-west3-maven.pkg.dev/theta-citron-479412-e0/noreja-maven-release</url>
 		</repository>
 	</distributionManagement>
 	<licenses>
@@ -1147,6 +1135,13 @@
 	</developers>
 
 	<build>
+		<extensions>
+			<extension>
+				<groupId>com.google.cloud.artifactregistry</groupId>
+				<artifactId>artifactregistry-maven-wagon</artifactId>
+				<version>2.2.0</version>
+			</extension>
+		</extensions>
 		<plugins>
 			<plugin>
 				<groupId>io.spring.javaformat</groupId>
