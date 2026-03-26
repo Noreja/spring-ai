@@ -21,7 +21,7 @@
 
 	<groupId>org.springframework.ai</groupId>
     <artifactId>spring-ai-bom</artifactId>
-	<version>1.0.4-noreja-SNAPSHOT</version>
+	<version>1.1.2</version>
 
     <packaging>pom</packaging>
 
@@ -51,12 +51,16 @@
 	</ciManagement>
 	<distributionManagement>
 		<snapshotRepository>
-			<id>artifact-snapshot-registry</id>
-			<url>artifactregistry://europe-west3-maven.pkg.dev/theta-citron-479412-e0/noreja-maven-snapshots</url>
+			<id>spring-snapshots</id>
+			<url>https://repo.spring.io/libs-snapshot-local</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
 		</snapshotRepository>
 		<repository>
-			<id>artifact-registry</id>
-			<url>artifactregistry://europe-west3-maven.pkg.dev/theta-citron-479412-e0/noreja-maven-release</url>
+			<id>repo.spring.io</id>
+			<name>Spring Release Repository</name>
+			<url>https://repo.spring.io/libs-release-local</url>
 		</repository>
 	</distributionManagement>
 	<licenses>
@@ -203,7 +207,19 @@
 
 			<dependency>
 				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-model-chat-memory-repository-cosmos-db</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
 				<artifactId>spring-ai-model-chat-memory-repository-jdbc</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-model-chat-memory-repository-mongodb</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 
@@ -238,6 +254,25 @@
                 <artifactId>spring-ai-bedrock-converse</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-elevenlabs</artifactId>
+				<version>${project.version}</version>
+				<optional>true</optional>
+			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-google-genai</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-google-genai-embedding</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 
             <dependency>
                 <groupId>org.springframework.ai</groupId>
@@ -278,6 +313,12 @@
 
             <dependency>
                 <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-openai-sdk</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
                 <artifactId>spring-ai-postgresml</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -305,7 +346,6 @@
                 <artifactId>spring-ai-vertex-ai-gemini</artifactId>
                 <version>${project.version}</version>
             </dependency>
-
 
 			<dependency>
 				<groupId>org.springframework.ai</groupId>
@@ -482,7 +522,19 @@
 
 			<dependency>
 				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-autoconfigure-model-chat-memory-repository-cosmos-db</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
 				<artifactId>spring-ai-autoconfigure-model-chat-memory-repository-jdbc</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-autoconfigure-model-chat-memory-repository-mongodb</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 
@@ -521,15 +573,39 @@
 
             <dependency>
                 <groupId>org.springframework.ai</groupId>
-                <artifactId>spring-ai-autoconfigure-mcp-client</artifactId>
+                <artifactId>spring-ai-autoconfigure-mcp-client-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
-			<!-- Spring AI MCP server autoconfiguration -->
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-autoconfigure-mcp-client-httpclient</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.springframework.ai</groupId>
-                <artifactId>spring-ai-autoconfigure-mcp-server</artifactId>
+                <artifactId>spring-ai-autoconfigure-mcp-client-webflux</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+			<!-- Spring AI MCP server autoconfigurations -->
+
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-autoconfigure-mcp-server-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-autoconfigure-mcp-server-webmvc</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-autoconfigure-mcp-server-webflux</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -558,6 +634,18 @@
 			<dependency>
 				<groupId>org.springframework.ai</groupId>
 				<artifactId>spring-ai-autoconfigure-model-bedrock-ai</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-autoconfigure-model-elevenlabs</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-autoconfigure-model-google-genai</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 
@@ -595,6 +683,12 @@
 			<dependency>
 				<groupId>org.springframework.ai</groupId>
 				<artifactId>spring-ai-autoconfigure-model-openai</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-autoconfigure-model-openai-sdk</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 
@@ -912,6 +1006,12 @@
 
 			<dependency>
 				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-starter-model-elevenlabs</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
 				<artifactId>spring-ai-starter-model-minimax</artifactId>
 				<version>${project.version}</version>
 			</dependency>
@@ -938,6 +1038,12 @@
 			<dependency>
 				<groupId>org.springframework.ai</groupId>
 				<artifactId>spring-ai-starter-model-openai</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-starter-model-openai-sdk</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 
@@ -974,6 +1080,18 @@
 
 			<dependency>
 				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-starter-model-google-genai</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-starter-model-google-genai-embedding</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
 				<artifactId>spring-ai-starter-model-zhipuai</artifactId>
 				<version>${project.version}</version>
 			</dependency>
@@ -1000,6 +1118,12 @@
 
 			<dependency>
 				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-starter-mcp-server-common</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
 				<artifactId>spring-ai-starter-mcp-server</artifactId>
 				<version>${project.version}</version>
 			</dependency>
@@ -1015,6 +1139,13 @@
 				<artifactId>spring-ai-starter-mcp-server-webmvc</artifactId>
 				<version>${project.version}</version>
 			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-mcp-annotations</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
 
 			<!-- Spring AI Spring Boot starter for Chat Memory (with the default in-memory Chat memory repository) -->
 
@@ -1034,7 +1165,19 @@
 
 			<dependency>
 				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-starter-model-chat-memory-repository-cosmos-db</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
 				<artifactId>spring-ai-starter-model-chat-memory-repository-jdbc</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-starter-model-chat-memory-repository-mongodb</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 
@@ -1135,13 +1278,6 @@
 	</developers>
 
 	<build>
-		<extensions>
-			<extension>
-				<groupId>com.google.cloud.artifactregistry</groupId>
-				<artifactId>artifactregistry-maven-wagon</artifactId>
-				<version>2.2.0</version>
-			</extension>
-		</extensions>
 		<plugins>
 			<plugin>
 				<groupId>io.spring.javaformat</groupId>

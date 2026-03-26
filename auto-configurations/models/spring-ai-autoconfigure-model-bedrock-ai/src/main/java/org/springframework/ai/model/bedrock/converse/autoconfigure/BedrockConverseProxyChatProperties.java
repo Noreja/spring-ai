@@ -25,7 +25,6 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
  *
  * @author Christian Tzolov
  * @author Josh Long
- * @author Sun Yuhan
  * @since 1.0.0
  */
 @ConfigurationProperties(BedrockConverseProxyChatProperties.CONFIG_PREFIX)

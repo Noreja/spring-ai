@@ -1,7 +1,9 @@
+.checkstyle
 target
 .classpath
 .project
 .settings
+.env
 bin
 build.log
 integration-repo
@@ -50,3 +52,7 @@ CLAUDE.md
 qodana.yaml
 __pycache__/
 *.pyc
+tmp
+
+
+plans

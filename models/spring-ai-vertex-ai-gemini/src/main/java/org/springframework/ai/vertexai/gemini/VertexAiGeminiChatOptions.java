@@ -29,11 +29,15 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import org.springframework.ai.model.tool.StructuredOutputChatOptions;
 import org.springframework.ai.model.tool.ToolCallingChatOptions;
 import org.springframework.ai.tool.ToolCallback;
+import org.springframework.ai.util.json.schema.JsonSchemaGenerator;
 import org.springframework.ai.vertexai.gemini.VertexAiGeminiChatModel.ChatModel;
 import org.springframework.ai.vertexai.gemini.common.VertexAiGeminiSafetySetting;
+import org.springframework.ai.vertexai.gemini.schema.JsonSchemaConverter;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -48,7 +52,7 @@ import org.springframework.util.Assert;
  * @since 1.0.0
  */
 @JsonInclude(Include.NON_NULL)
-public class VertexAiGeminiChatOptions implements ToolCallingChatOptions {
+public class VertexAiGeminiChatOptions implements ToolCallingChatOptions, StructuredOutputChatOptions {
 
 	// https://cloud.google.com/vertex-ai/docs/reference/rest/v1/GenerationConfig
 
@@ -63,6 +67,20 @@ public class VertexAiGeminiChatOptions implements ToolCallingChatOptions {
 	 * Optional. Controls the randomness of predictions.
 	 */
 	private @JsonProperty("temperature") Double temperature;
+
+	/**
+	 * Optional. Enable returning the log probabilities of the top candidate tokens at each generation step.
+	 * The model's chosen token might not be the same as the top candidate token at each step.
+	 * Specify the number of candidates to return by using an integer value in the range of 1-20.
+	 * Should not be set unless responseLogprobs is set to true.
+	 */
+	private @JsonProperty("logprobs") Integer logprobs;
+
+	/**
+	 * Optional. If true, returns the log probabilities of the tokens that were chosen by the model at each step.
+	 * By default, this parameter is set to false.
+	 */
+	private @JsonProperty("responseLogprobs") boolean responseLogprobs;
 
 	/**
 	 * Optional. If specified, nucleus sampling will be used.
@@ -95,6 +113,11 @@ public class VertexAiGeminiChatOptions implements ToolCallingChatOptions {
 	 * - application/json: JSON response in the candidates.
 	 */
 	private @JsonProperty("responseMimeType") String responseMimeType;
+
+	/**
+	 * Optional. Geminie response schema.
+	 */
+	private @JsonProperty("responseSchema") String responseSchema;
 
 	/**
 	 * Optional. Frequency penalties.
@@ -156,12 +179,14 @@ public class VertexAiGeminiChatOptions implements ToolCallingChatOptions {
 		options.setModel(fromOptions.getModel());
 		options.setToolCallbacks(fromOptions.getToolCallbacks());
 		options.setResponseMimeType(fromOptions.getResponseMimeType());
+		options.setResponseSchema(fromOptions.getResponseSchema());
 		options.setToolNames(fromOptions.getToolNames());
-		options.setResponseMimeType(fromOptions.getResponseMimeType());
 		options.setGoogleSearchRetrieval(fromOptions.getGoogleSearchRetrieval());
 		options.setSafetySettings(fromOptions.getSafetySettings());
 		options.setInternalToolExecutionEnabled(fromOptions.getInternalToolExecutionEnabled());
 		options.setToolContext(fromOptions.getToolContext());
+		options.setLogprobs(fromOptions.getLogprobs());
+		options.setResponseLogprobs(fromOptions.getResponseLogprobs());
 		return options;
 	}
 
@@ -181,6 +206,10 @@ public class VertexAiGeminiChatOptions implements ToolCallingChatOptions {
 
 	public void setTemperature(Double temperature) {
 		this.temperature = temperature;
+	}
+
+	public void setResponseLogprobs(boolean responseLogprobs) {
+		this.responseLogprobs = responseLogprobs;
 	}
 
 	@Override
@@ -243,6 +272,14 @@ public class VertexAiGeminiChatOptions implements ToolCallingChatOptions {
 
 	public void setResponseMimeType(String mimeType) {
 		this.responseMimeType = mimeType;
+	}
+
+	public String getResponseSchema() {
+		return this.responseSchema;
+	}
+
+	public void setResponseSchema(String responseSchema) {
+		this.responseSchema = responseSchema;
 	}
 
 	@Override
@@ -326,6 +363,34 @@ public class VertexAiGeminiChatOptions implements ToolCallingChatOptions {
 		this.toolContext = toolContext;
 	}
 
+	public Integer getLogprobs() {
+		return this.logprobs;
+	}
+
+	public void setLogprobs(Integer logprobs) {
+		this.logprobs = logprobs;
+	}
+
+	public boolean getResponseLogprobs() {
+		return this.responseLogprobs;
+	}
+
+	@Override
+	public String getOutputSchema() {
+		return this.getResponseSchema();
+	}
+
+	@Override
+	@JsonIgnore
+	public void setOutputSchema(String jsonSchemaText) {
+		ObjectNode jsonSchema = JsonSchemaConverter.fromJson(jsonSchemaText);
+		ObjectNode openApiSchema = JsonSchemaConverter.convertToOpenApiSchema(jsonSchema);
+		JsonSchemaGenerator.convertTypeValuesToUpperCase(openApiSchema);
+
+		this.setResponseSchema(openApiSchema.toPrettyString());
+		this.setResponseMimeType("application/json");
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {
@@ -342,19 +407,22 @@ public class VertexAiGeminiChatOptions implements ToolCallingChatOptions {
 				&& Objects.equals(this.presencePenalty, that.presencePenalty)
 				&& Objects.equals(this.maxOutputTokens, that.maxOutputTokens) && Objects.equals(this.model, that.model)
 				&& Objects.equals(this.responseMimeType, that.responseMimeType)
+				&& Objects.equals(this.responseSchema, that.responseSchema)
 				&& Objects.equals(this.toolCallbacks, that.toolCallbacks)
 				&& Objects.equals(this.toolNames, that.toolNames)
 				&& Objects.equals(this.safetySettings, that.safetySettings)
 				&& Objects.equals(this.internalToolExecutionEnabled, that.internalToolExecutionEnabled)
-				&& Objects.equals(this.toolContext, that.toolContext);
+				&& Objects.equals(this.toolContext, that.toolContext) && Objects.equals(this.logprobs, that.logprobs)
+				&& Objects.equals(this.responseLogprobs, that.responseLogprobs);
 	}
 
 	@Override
 	public int hashCode() {
 		return Objects.hash(this.stopSequences, this.temperature, this.topP, this.topK, this.candidateCount,
 				this.frequencyPenalty, this.presencePenalty, this.maxOutputTokens, this.model, this.responseMimeType,
-				this.toolCallbacks, this.toolNames, this.googleSearchRetrieval, this.safetySettings,
-				this.internalToolExecutionEnabled, this.toolContext);
+				this.responseSchema, this.toolCallbacks, this.toolNames, this.googleSearchRetrieval,
+				this.safetySettings, this.internalToolExecutionEnabled, this.toolContext, this.logprobs,
+				this.responseLogprobs);
 	}
 
 	@Override
@@ -363,9 +431,10 @@ public class VertexAiGeminiChatOptions implements ToolCallingChatOptions {
 				+ this.temperature + ", topP=" + this.topP + ", topK=" + this.topK + ", frequencyPenalty="
 				+ this.frequencyPenalty + ", presencePenalty=" + this.presencePenalty + ", candidateCount="
 				+ this.candidateCount + ", maxOutputTokens=" + this.maxOutputTokens + ", model='" + this.model + '\''
-				+ ", responseMimeType='" + this.responseMimeType + '\'' + ", toolCallbacks=" + this.toolCallbacks
-				+ ", toolNames=" + this.toolNames + ", googleSearchRetrieval=" + this.googleSearchRetrieval
-				+ ", safetySettings=" + this.safetySettings + '}';
+				+ ", responseMimeType='" + this.responseMimeType + '\'' + ", responseSchema='" + this.responseSchema
+				+ ", toolCallbacks=" + this.toolCallbacks + ", toolNames=" + this.toolNames + ", googleSearchRetrieval="
+				+ this.googleSearchRetrieval + ", safetySettings=" + this.safetySettings + ", logProbs=" + this.logprobs
+				+ ", responseLogprobs=" + this.responseLogprobs + '}';
 	}
 
 	@Override
@@ -379,7 +448,7 @@ public class VertexAiGeminiChatOptions implements ToolCallingChatOptions {
 
 	}
 
-	public static class Builder {
+	public static final class Builder {
 
 		private VertexAiGeminiChatOptions options = new VertexAiGeminiChatOptions();
 
@@ -439,6 +508,16 @@ public class VertexAiGeminiChatOptions implements ToolCallingChatOptions {
 			return this;
 		}
 
+		public Builder responseSchema(String responseSchema) {
+			this.options.setResponseSchema(responseSchema);
+			return this;
+		}
+
+		public Builder outputSchema(String outputSchema) {
+			this.options.setOutputSchema(outputSchema);
+			return this;
+		}
+
 		public Builder toolCallbacks(List<ToolCallback> toolCallbacks) {
 			this.options.toolCallbacks = toolCallbacks;
 			return this;
@@ -485,6 +564,16 @@ public class VertexAiGeminiChatOptions implements ToolCallingChatOptions {
 			else {
 				this.options.toolContext.putAll(toolContext);
 			}
+			return this;
+		}
+
+		public Builder logprobs(Integer logprobs) {
+			this.options.setLogprobs(logprobs);
+			return this;
+		}
+
+		public Builder responseLogprobs(Boolean responseLogprobs) {
+			this.options.setResponseLogprobs(responseLogprobs);
 			return this;
 		}
 

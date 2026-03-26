@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright 2023-2024 the original author or authors.
+  ~ Copyright 2023-2025 the original author or authors.
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 
 	<groupId>org.springframework.ai</groupId>
 	<artifactId>spring-ai-parent</artifactId>
-	<version>1.0.4-noreja-SNAPSHOT</version>
+	<version>1.1.2</version>
 
 	<packaging>pom</packaging>
 	<url>https://github.com/spring-projects/spring-ai</url>
@@ -42,7 +42,9 @@
 		<module>advisors/spring-ai-advisors-vector-store</module>
 
 		<module>memory/repository/spring-ai-model-chat-memory-repository-cassandra</module>
+		<module>memory/repository/spring-ai-model-chat-memory-repository-cosmos-db</module>
 		<module>memory/repository/spring-ai-model-chat-memory-repository-jdbc</module>
+		<module>memory/repository/spring-ai-model-chat-memory-repository-mongodb</module>
 		<module>memory/repository/spring-ai-model-chat-memory-repository-neo4j</module>
 
 
@@ -88,7 +90,9 @@
 
 		<module>auto-configurations/models/chat/memory/spring-ai-autoconfigure-model-chat-memory</module>
 		<module>auto-configurations/models/chat/memory/repository/spring-ai-autoconfigure-model-chat-memory-repository-cassandra</module>
+		<module>auto-configurations/models/chat/memory/repository/spring-ai-autoconfigure-model-chat-memory-repository-cosmos-db</module>
 		<module>auto-configurations/models/chat/memory/repository/spring-ai-autoconfigure-model-chat-memory-repository-jdbc</module>
+		<module>auto-configurations/models/chat/memory/repository/spring-ai-autoconfigure-model-chat-memory-repository-mongodb</module>
 		<module>auto-configurations/models/chat/memory/repository/spring-ai-autoconfigure-model-chat-memory-repository-neo4j</module>
 
 		<module>auto-configurations/models/chat/observation/spring-ai-autoconfigure-model-chat-observation</module>
@@ -99,8 +103,10 @@
 		<module>auto-configurations/models/spring-ai-autoconfigure-model-anthropic</module>
 		<module>auto-configurations/models/spring-ai-autoconfigure-model-azure-openai</module>
 		<module>auto-configurations/models/spring-ai-autoconfigure-model-bedrock-ai</module>
+		<module>auto-configurations/models/spring-ai-autoconfigure-model-elevenlabs</module>
 		<module>auto-configurations/models/spring-ai-autoconfigure-model-huggingface</module>
 		<module>auto-configurations/models/spring-ai-autoconfigure-model-openai</module>
+		<module>auto-configurations/models/spring-ai-autoconfigure-model-openai-sdk</module>
 		<module>auto-configurations/models/spring-ai-autoconfigure-model-minimax</module>
 		<module>auto-configurations/models/spring-ai-autoconfigure-model-mistral-ai</module>
 		<module>auto-configurations/models/spring-ai-autoconfigure-model-oci-genai</module>
@@ -110,11 +116,17 @@
 		<module>auto-configurations/models/spring-ai-autoconfigure-model-stability-ai</module>
 		<module>auto-configurations/models/spring-ai-autoconfigure-model-transformers</module>
 		<module>auto-configurations/models/spring-ai-autoconfigure-model-vertex-ai</module>
+		<module>auto-configurations/models/spring-ai-autoconfigure-model-google-genai</module>
 		<module>auto-configurations/models/spring-ai-autoconfigure-model-zhipuai</module>
 		<module>auto-configurations/models/spring-ai-autoconfigure-model-deepseek</module>
 
-		<module>auto-configurations/mcp/spring-ai-autoconfigure-mcp-client</module>
-		<module>auto-configurations/mcp/spring-ai-autoconfigure-mcp-server</module>
+		<module>auto-configurations/mcp/spring-ai-autoconfigure-mcp-client-common</module>
+		<module>auto-configurations/mcp/spring-ai-autoconfigure-mcp-client-httpclient</module>
+		<module>auto-configurations/mcp/spring-ai-autoconfigure-mcp-client-webflux</module>
+
+		<module>auto-configurations/mcp/spring-ai-autoconfigure-mcp-server-common</module>
+		<module>auto-configurations/mcp/spring-ai-autoconfigure-mcp-server-webmvc</module>
+		<module>auto-configurations/mcp/spring-ai-autoconfigure-mcp-server-webflux</module>
 
 		<module>auto-configurations/vector-stores/spring-ai-autoconfigure-vector-store-azure</module>
 		<module>auto-configurations/vector-stores/spring-ai-autoconfigure-vector-store-azure-cosmos-db</module>
@@ -162,17 +174,21 @@
 		<module>models/spring-ai-azure-openai</module>
 		<module>models/spring-ai-bedrock</module>
 		<module>models/spring-ai-bedrock-converse</module>
+		<module>models/spring-ai-elevenlabs</module>
 		<module>models/spring-ai-huggingface</module>
 		<module>models/spring-ai-minimax</module>
 		<module>models/spring-ai-mistral-ai</module>
 		<module>models/spring-ai-oci-genai</module>
 		<module>models/spring-ai-ollama</module>
 		<module>models/spring-ai-openai</module>
+		<module>models/spring-ai-openai-sdk</module>
 		<module>models/spring-ai-postgresml</module>
 		<module>models/spring-ai-stability-ai</module>
 		<module>models/spring-ai-transformers</module>
 		<module>models/spring-ai-vertex-ai-embedding</module>
 		<module>models/spring-ai-vertex-ai-gemini</module>
+		<module>models/spring-ai-google-genai</module>
+		<module>models/spring-ai-google-genai-embedding</module>
 		<module>models/spring-ai-zhipuai</module>
 		<module>models/spring-ai-deepseek</module>
 
@@ -180,12 +196,16 @@
 		<module>spring-ai-spring-boot-starters/spring-ai-starter-model-azure-openai</module>
 		<module>spring-ai-spring-boot-starters/spring-ai-starter-model-bedrock</module>
 		<module>spring-ai-spring-boot-starters/spring-ai-starter-model-bedrock-converse</module>
+		<module>spring-ai-spring-boot-starters/spring-ai-starter-model-google-genai</module>
+		<module>spring-ai-spring-boot-starters/spring-ai-starter-model-google-genai-embedding</module>
+		<module>spring-ai-spring-boot-starters/spring-ai-starter-model-elevenlabs</module>
 		<module>spring-ai-spring-boot-starters/spring-ai-starter-model-huggingface</module>
 		<module>spring-ai-spring-boot-starters/spring-ai-starter-model-minimax</module>
 		<module>spring-ai-spring-boot-starters/spring-ai-starter-model-mistral-ai</module>
 		<module>spring-ai-spring-boot-starters/spring-ai-starter-model-oci-genai</module>
 		<module>spring-ai-spring-boot-starters/spring-ai-starter-model-ollama</module>
 		<module>spring-ai-spring-boot-starters/spring-ai-starter-model-openai</module>
+		<module>spring-ai-spring-boot-starters/spring-ai-starter-model-openai-sdk</module>
 		<module>spring-ai-spring-boot-starters/spring-ai-starter-model-postgresml-embedding</module>
 		<module>spring-ai-spring-boot-starters/spring-ai-starter-model-stability-ai</module>
 		<module>spring-ai-spring-boot-starters/spring-ai-starter-model-transformers</module>
@@ -196,7 +216,9 @@
 
 		<module>spring-ai-spring-boot-starters/spring-ai-starter-model-chat-memory</module>
 		<module>spring-ai-spring-boot-starters/spring-ai-starter-model-chat-memory-repository-cassandra</module>
+		<module>spring-ai-spring-boot-starters/spring-ai-starter-model-chat-memory-repository-cosmos-db</module>
 		<module>spring-ai-spring-boot-starters/spring-ai-starter-model-chat-memory-repository-jdbc</module>
+		<module>spring-ai-spring-boot-starters/spring-ai-starter-model-chat-memory-repository-mongodb</module>
 		<module>spring-ai-spring-boot-starters/spring-ai-starter-model-chat-memory-repository-neo4j</module>
 
 		<module>spring-ai-spring-boot-starters/spring-ai-starter-mcp-client</module>
@@ -204,10 +226,11 @@
 		<module>spring-ai-spring-boot-starters/spring-ai-starter-mcp-client-webflux</module>
 		<module>spring-ai-spring-boot-starters/spring-ai-starter-mcp-server-webflux</module>
 		<module>spring-ai-spring-boot-starters/spring-ai-starter-mcp-server-webmvc</module>
-
+		
 		<module>spring-ai-integration-tests</module>
 
 		<module>mcp/common</module>
+		<module>mcp/mcp-annotations-spring</module>
 	</modules>
 
 	<organization>
@@ -229,13 +252,12 @@
 	</ciManagement>
 	<distributionManagement>
 		<snapshotRepository>
-			<id>artifact-snapshot-registry</id>
-			<url>artifactregistry://europe-west3-maven.pkg.dev/theta-citron-479412-e0/noreja-maven-snapshots</url>
+			<id>spring-snapshots</id>
+			<url>https://repo.spring.io/libs-snapshot-local</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
 		</snapshotRepository>
-		<repository>
-			<id>artifact-registry</id>
-			<url>artifactregistry://europe-west3-maven.pkg.dev/theta-citron-479412-e0/noreja-maven-release</url>
-		</repository>
 	</distributionManagement>
 	<licenses>
 		<license>
@@ -254,39 +276,42 @@
 		<kotlin.compiler.jvmTarget>${java.version}</kotlin.compiler.jvmTarget>
 
 		<!-- production dependencies -->
-		<spring-boot.version>3.5.0</spring-boot.version>
+		<spring-boot.version>3.5.8</spring-boot.version>
 		<ST4.version>4.3.4</ST4.version>
 		<azure-open-ai-client.version>1.0.0-beta.16</azure-open-ai-client.version>
+		<openai-sdk.version>4.8.0</openai-sdk.version>
+		<azure-identity.version>1.18.1</azure-identity.version>
 		<jtokkit.version>1.1.0</jtokkit.version>
-		<victools.version>4.37.0</victools.version>
 		<kotlin.version>1.9.25</kotlin.version>
 
 		<!-- NOTE: keep bedrockruntime and awssdk versions aligned -->
-		<bedrockruntime.version>2.31.65</bedrockruntime.version>
-		<awssdk.version>2.31.65</awssdk.version>
+		<bedrockruntime.version>2.36.3</bedrockruntime.version>
+		<awssdk.version>2.36.3</awssdk.version>
 
 		<djl.version>0.32.0</djl.version>
 		<onnxruntime.version>1.19.2</onnxruntime.version>
 		<oci-sdk-version>3.63.1</oci-sdk-version>
-		<com.google.cloud.version>26.60.0</com.google.cloud.version>
+		<com.google.cloud.version>26.72.0</com.google.cloud.version>
+		<com.google.genai.version>1.28.0</com.google.genai.version>
 		<ibm.sdk.version>9.20.0</ibm.sdk.version>
-		<jsonschema.version>4.37.0</jsonschema.version>
-		<swagger-annotations.version>2.2.30</swagger-annotations.version>
+		<jsonschema.version>4.38.0</jsonschema.version>
+		<swagger-annotations.version>2.2.38</swagger-annotations.version>
 		<mockk-jvm.version>1.13.13</mockk-jvm.version>
 		<spring-cloud-bindings.version>2.0.3</spring-cloud-bindings.version>
 
-		<jsoup.version>1.18.3</jsoup.version>
+		<jsoup.version>1.21.2</jsoup.version>
 
 		<!-- Protobuf -->
-		<protobuf-java.version>3.25.2</protobuf-java.version>
+		<protobuf-java.version>3.25.8</protobuf-java.version>
 
 		<!-- readers/writer/stores dependencies-->
-		<pdfbox.version>3.0.3</pdfbox.version>
+		<pdfbox.version>3.0.5</pdfbox.version>
 		<pgvector.version>0.1.6</pgvector.version>
 		<sap.hanadb.version>2.20.11</sap.hanadb.version>
 		<coherence.version>24.09</coherence.version>
 		<milvus.version>2.5.8</milvus.version>
 		<gemfire.testcontainers.version>2.3.0</gemfire.testcontainers.version>
+		<testcontainers.version>1.20.4</testcontainers.version>
 
 		<pinecone.version>4.0.1</pinecone.version>
 		<pinecone.protobuf-java-util.version>4.29.3</pinecone.protobuf-java-util.version>
@@ -294,7 +319,6 @@
 		<fastjson2.version>2.0.46</fastjson2.version>
 		<azure-core.version>1.55.3</azure-core.version>
 		<azure-json.version>1.5.0</azure-json.version>
-		<azure-identity.version>1.15.4</azure-identity.version>
 		<azure-search.version>11.7.6</azure-search.version>
 		<azure-cosmos.version>5.22.0</azure-cosmos.version>
 		<elasticsearch-java.version>8.18.1</elasticsearch-java.version>
@@ -307,7 +331,7 @@
 		<mysql.version>9.2.0</mysql.version>
 		<commonmark.version>0.22.0</commonmark.version>
 
-		<couchbase.version>3.8.0</couchbase.version>
+		<couchbase.version>3.9.1</couchbase.version>
 		<neo4j-cypher-dsl-bom.version>2024.5.1</neo4j-cypher-dsl-bom.version>
 
 		<!-- testing dependencies -->
@@ -315,11 +339,12 @@
 		<json-unit-assertj.version>4.1.0</json-unit-assertj.version>
 
 		<!-- MCP-->
-		<mcp.sdk.version>0.10.0</mcp.sdk.version>
+		<mcp.sdk.version>0.17.0</mcp.sdk.version>
+		<mcp-annotations.version>0.8.0</mcp-annotations.version>
 
 		<!-- plugin versions -->
 		<antlr.version>4.13.1</antlr.version>
-		<maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
+		<maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
 		<maven-surefire-plugin.version>3.1.2</maven-surefire-plugin.version>
 		<maven-failsafe-plugin.version>3.5.2</maven-failsafe-plugin.version>
 		<maven-javadoc-plugin.version>3.5.0</maven-javadoc-plugin.version>
@@ -340,34 +365,15 @@
 		<maven-checkstyle-plugin.failsOnError>true</maven-checkstyle-plugin.failsOnError>
 		<maven-checkstyle-plugin.failOnViolation>true</maven-checkstyle-plugin.failOnViolation>
 		<puppycrawl-tools-checkstyle.version>9.3</puppycrawl-tools-checkstyle.version>
+		<spring-javaformat-checkstyle.version>0.0.43</spring-javaformat-checkstyle.version>
+		<maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
 
-		<disable.checks>true</disable.checks>
+		<disable.checks>false</disable.checks>
 
 	</properties>
 
 	<build>
-		<extensions>
-			<extension>
-				<groupId>com.google.cloud.artifactregistry</groupId>
-				<artifactId>artifactregistry-maven-wagon</artifactId>
-				<version>2.2.0</version>
-			</extension>
-		</extensions>
 		<plugins>
-			<plugin>
-				<groupId>io.spring.javaformat</groupId>
-				<artifactId>spring-javaformat-maven-plugin</artifactId>
-				<version>${spring-javaformat-maven-plugin.version}</version>
-				<executions>
-					<execution>
-						<phase>validate</phase>
-						<inherited>true</inherited>
-						<goals>
-							<goal>validate</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-checkstyle-plugin</artifactId>
@@ -381,7 +387,7 @@
 					<dependency>
 						<groupId>io.spring.javaformat</groupId>
 						<artifactId>spring-javaformat-checkstyle</artifactId>
-						<version>0.0.43</version>
+						<version>${spring-javaformat-checkstyle.version}</version>
 					</dependency>
 				</dependencies>
 				<executions>
@@ -425,6 +431,8 @@
 				<configuration>
 					<jvmTarget>${java.version}</jvmTarget>
 					<javaParameters>true</javaParameters>
+					<apiVersion>1.7</apiVersion>
+					<languageVersion>1.7</languageVersion>
 				</configuration>
 				<executions>
 					<execution>
@@ -460,7 +468,7 @@
 				<configuration>
 					<release>${java.version}</release>
 					<compilerArgs>
-						<compilerArg>-parameters</compilerArg>
+						<arg>-parameters</arg>
 					</compilerArgs>
 				</configuration>
 				<executions>
@@ -600,6 +608,63 @@
 
 	<profiles>
 		<profile>
+			<id>format-check</id>
+			<activation>
+				<property>
+					<name>env.CI</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>io.spring.javaformat</groupId>
+						<artifactId>spring-javaformat-maven-plugin</artifactId>
+						<version>${spring-javaformat-maven-plugin.version}</version>
+						<executions>
+							<execution>
+								<phase>validate</phase>
+								<inherited>true</inherited>
+								<goals>
+									<goal>validate</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+
+				</plugins>
+			</build>
+
+		</profile>
+		<profile>
+			<id>format-apply</id>
+			<activation>
+				<property>
+					<name>!env.CI</name>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>io.spring.javaformat</groupId>
+						<artifactId>spring-javaformat-maven-plugin</artifactId>
+						<version>${spring-javaformat-maven-plugin.version}</version>
+						<executions>
+							<execution>
+								<phase>process-sources</phase>
+								<inherited>true</inherited>
+								<goals>
+									<goal>apply</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+
+				</plugins>
+			</build>
+
+		</profile>
+		<profile>
 			<id>license</id>
 			<activation>
 				<activeByDefault>false</activeByDefault>
@@ -720,12 +785,14 @@
 								<exclude>org.springframework.ai.anthropic/**/*IT.java</exclude>
 								<exclude>org.springframework.ai.azure.openai/**/*IT.java</exclude>
 								<exclude>org.springframework.ai.bedrock/**/*IT.java</exclude>
-								 <exclude>org.springframework.ai.bedrock.converse/**/*IT.java</exclude>
+								<exclude>org.springframework.ai.bedrock.converse/**/*IT.java</exclude>
+								<exclude>org.springframework.ai.elevenlabs/**/*IT.java</exclude>
 								<exclude>org.springframework.ai.huggingface/**/*IT.java</exclude>
 								<exclude>org.springframework.ai.minimax/**/*IT.java</exclude>
 								<exclude>org.springframework.ai.mistralai/**/*IT.java</exclude>
 								<exclude>org.springframework.ai.oci/**/*IT.java</exclude>
 								<exclude>org.springframework.ai.ollama/**/*IT.java</exclude>								<!-- <exclude>org.springframework.ai.openai/**/*IT.java</exclude> -->
+								<exclude>org.springframework.ai.openaisdk/**/*IT.java</exclude>
 								<exclude>org.springframework.ai.postgresml/**/*IT.java</exclude>
 								<exclude>org.springframework.ai.stabilityai/**/*IT.java</exclude>
 								<exclude>org.springframework.ai.transformers/**/*IT.java</exclude>
@@ -768,6 +835,7 @@
 								 <exclude>org.springframework.ai.autoconfigure.huggingface/**/**IT.java</exclude>
 
 								 <exclude>org.springframework.ai.autoconfigure.chat/**/**IT.java</exclude>
+								 <exclude>org.springframework.ai.autoconfigure.elevenlabs/**/**IT.java</exclude>
 								 <exclude>org.springframework.ai.autoconfigure.embedding/**/**IT.java</exclude>
 								 <exclude>org.springframework.ai.autoconfigure.image/**/**IT.java</exclude>
 
@@ -878,22 +946,23 @@
 	    </properties>
 	    <build>
 	        <plugins>
-						<plugin>
-								<groupId>org.apache.maven.plugins</groupId>
-								<artifactId>maven-gpg-plugin</artifactId>
-								<executions>
-										<execution>
-												<id>sign-artifacts</id>
-												<phase>verify</phase>
-												<goals>
-														<goal>sign</goal>
-												</goals>
-										</execution>
-								</executions>
-								<configuration>
-										<!-- Passphrase consumed from MAVEN_GPG_PASSPHRASE environment variable. -->
-								</configuration>
-						</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-gpg-plugin</artifactId>
+					<version>${maven-gpg-plugin.version}</version>
+					<executions>
+						<execution>
+							<id>sign-artifacts</id>
+							<phase>verify</phase>
+							<goals>
+								<goal>sign</goal>
+							</goals>
+						</execution>
+					</executions>
+					<configuration>
+						<!-- Passphrase consumed from MAVEN_GPG_PASSPHRASE environment variable. -->
+					</configuration>
+				</plugin>
 	            <plugin>
 	                <groupId>org.sonatype.central</groupId>
 	                <artifactId>central-publishing-maven-plugin</artifactId>
@@ -901,6 +970,7 @@
 	                <configuration>
 	                    <publishingServerId>central</publishingServerId>
 	                    <autoPublish>true</autoPublish>
+	                    <excludeArtifacts>spring-ai-integration-tests</excludeArtifacts>
 	                </configuration>
 	            </plugin>
 	        </plugins>
@@ -925,6 +995,12 @@
 				<version>${mcp.sdk.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
+			</dependency>
+			<!-- Override commons-lang3 to fix CVE (Uncontrolled Recursion) in 3.17.0 -->
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-lang3</artifactId>
+				<version>3.18.0</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

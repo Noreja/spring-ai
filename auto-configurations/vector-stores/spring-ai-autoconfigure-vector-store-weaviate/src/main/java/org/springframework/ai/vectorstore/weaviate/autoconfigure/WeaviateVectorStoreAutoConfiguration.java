@@ -28,12 +28,14 @@ import org.springframework.ai.embedding.TokenCountBatchingStrategy;
 import org.springframework.ai.vectorstore.SpringAIVectorStoreTypes;
 import org.springframework.ai.vectorstore.observation.VectorStoreObservationConvention;
 import org.springframework.ai.vectorstore.weaviate.WeaviateVectorStore;
+import org.springframework.ai.vectorstore.weaviate.WeaviateVectorStoreOptions;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.context.properties.PropertyMapper;
 import org.springframework.context.annotation.Bean;
 
 /**
@@ -42,17 +44,18 @@ import org.springframework.context.annotation.Bean;
  * @author Christian Tzolov
  * @author Eddú Meléndez
  * @author Soby Chacko
+ * @author Jonghoon Park
  */
 @AutoConfiguration
 @ConditionalOnClass({ EmbeddingModel.class, WeaviateVectorStore.class })
-@EnableConfigurationProperties({ WeaviateVectorStoreProperties.class })
+@EnableConfigurationProperties(WeaviateVectorStoreProperties.class)
 @ConditionalOnProperty(name = SpringAIVectorStoreTypes.TYPE, havingValue = SpringAIVectorStoreTypes.WEAVIATE,
 		matchIfMissing = true)
 public class WeaviateVectorStoreAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean(WeaviateConnectionDetails.class)
-	public PropertiesWeaviateConnectionDetails weaviateConnectionDetails(WeaviateVectorStoreProperties properties) {
+	PropertiesWeaviateConnectionDetails weaviateConnectionDetails(WeaviateVectorStoreProperties properties) {
 		return new PropertiesWeaviateConnectionDetails(properties);
 	}
 
@@ -71,7 +74,7 @@ public class WeaviateVectorStoreAutoConfiguration {
 	}
 
 	@Bean
-	@ConditionalOnMissingBean(BatchingStrategy.class)
+	@ConditionalOnMissingBean
 	BatchingStrategy batchingStrategy() {
 		return new TokenCountBatchingStrategy();
 	}
@@ -82,9 +85,8 @@ public class WeaviateVectorStoreAutoConfiguration {
 			WeaviateVectorStoreProperties properties, ObjectProvider<ObservationRegistry> observationRegistry,
 			ObjectProvider<VectorStoreObservationConvention> customObservationConvention,
 			BatchingStrategy batchingStrategy) {
-
 		return WeaviateVectorStore.builder(weaviateClient, embeddingModel)
-			.objectClass(properties.getObjectClass())
+			.options(mappingPropertiesToOptions(properties))
 			.filterMetadataFields(properties.getFilterField()
 				.entrySet()
 				.stream()
@@ -95,6 +97,17 @@ public class WeaviateVectorStoreAutoConfiguration {
 			.customObservationConvention(customObservationConvention.getIfAvailable(() -> null))
 			.batchingStrategy(batchingStrategy)
 			.build();
+	}
+
+	WeaviateVectorStoreOptions mappingPropertiesToOptions(WeaviateVectorStoreProperties properties) {
+		WeaviateVectorStoreOptions weaviateVectorStoreOptions = new WeaviateVectorStoreOptions();
+
+		PropertyMapper mapper = PropertyMapper.get();
+		mapper.from(properties::getContentFieldName).whenHasText().to(weaviateVectorStoreOptions::setContentFieldName);
+		mapper.from(properties::getObjectClass).whenHasText().to(weaviateVectorStoreOptions::setObjectClass);
+		mapper.from(properties::getMetaFieldPrefix).whenHasText().to(weaviateVectorStoreOptions::setMetaFieldPrefix);
+
+		return weaviateVectorStoreOptions;
 	}
 
 	static class PropertiesWeaviateConnectionDetails implements WeaviateConnectionDetails {

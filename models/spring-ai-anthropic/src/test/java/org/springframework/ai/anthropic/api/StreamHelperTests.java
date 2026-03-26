@@ -81,9 +81,9 @@ class StreamHelperTests {
 		StreamHelper streamHelper = new StreamHelper();
 		AtomicReference<ChatCompletionResponseBuilder> contentBlockReference = new AtomicReference<>();
 
-		Usage usage = new Usage(10, 20);
+		Usage usage = new Usage(10, 20, null, null);
 		ChatCompletionResponse message = new ChatCompletionResponse("msg-1", "message", Role.ASSISTANT, List.of(),
-				"claude-3-5-sonnet", null, null, usage);
+				"claude-3-5-sonnet", null, null, usage, null);
 		MessageStartEvent startEvent = new MessageStartEvent(AnthropicApi.EventType.MESSAGE_START, message);
 
 		ChatCompletionResponse response = streamHelper.eventToChatCompletionResponse(startEvent, contentBlockReference);
@@ -102,9 +102,9 @@ class StreamHelperTests {
 		StreamHelper streamHelper = new StreamHelper();
 		AtomicReference<ChatCompletionResponseBuilder> contentBlockReference = new AtomicReference<>();
 
-		Usage usage = new Usage(0, 0);
+		Usage usage = new Usage(0, 0, null, null);
 		ChatCompletionResponse message = new ChatCompletionResponse("msg-1", "message", Role.ASSISTANT, List.of(),
-				"claude-3-5-sonnet", null, null, usage);
+				"claude-3-5-sonnet", null, null, usage, null);
 		MessageStartEvent startEvent = new MessageStartEvent(AnthropicApi.EventType.MESSAGE_START, message);
 		streamHelper.eventToChatCompletionResponse(startEvent, contentBlockReference);
 
@@ -128,9 +128,9 @@ class StreamHelperTests {
 		StreamHelper streamHelper = new StreamHelper();
 		AtomicReference<ChatCompletionResponseBuilder> contentBlockReference = new AtomicReference<>();
 
-		Usage usage = new Usage(0, 0);
+		Usage usage = new Usage(0, 0, null, null);
 		ChatCompletionResponse message = new ChatCompletionResponse("msg-1", "message", Role.ASSISTANT, List.of(),
-				"claude-3-5-sonnet", null, null, usage);
+				"claude-3-5-sonnet", null, null, usage, null);
 		MessageStartEvent startEvent = new MessageStartEvent(AnthropicApi.EventType.MESSAGE_START, message);
 		streamHelper.eventToChatCompletionResponse(startEvent, contentBlockReference);
 
@@ -153,9 +153,9 @@ class StreamHelperTests {
 		StreamHelper streamHelper = new StreamHelper();
 		AtomicReference<ChatCompletionResponseBuilder> contentBlockReference = new AtomicReference<>();
 
-		Usage usage = new Usage(0, 0);
+		Usage usage = new Usage(0, 0, null, null);
 		ChatCompletionResponse message = new ChatCompletionResponse("msg-1", "message", Role.ASSISTANT, List.of(),
-				"claude-3-5-sonnet", null, null, usage);
+				"claude-3-5-sonnet", null, null, usage, null);
 		MessageStartEvent startEvent = new MessageStartEvent(AnthropicApi.EventType.MESSAGE_START, message);
 		streamHelper.eventToChatCompletionResponse(startEvent, contentBlockReference);
 
@@ -175,9 +175,9 @@ class StreamHelperTests {
 		StreamHelper streamHelper = new StreamHelper();
 		AtomicReference<ChatCompletionResponseBuilder> contentBlockReference = new AtomicReference<>();
 
-		Usage usage = new Usage(0, 0);
+		Usage usage = new Usage(0, 0, null, null);
 		ChatCompletionResponse initialMessage = new ChatCompletionResponse("msg-1", "message", Role.ASSISTANT,
-				List.of(), "claude-3-5-sonnet", null, null, usage);
+				List.of(), "claude-3-5-sonnet", null, null, usage, null);
 		MessageStartEvent startEvent = new MessageStartEvent(AnthropicApi.EventType.MESSAGE_START, initialMessage);
 		streamHelper.eventToChatCompletionResponse(startEvent, contentBlockReference);
 
@@ -198,9 +198,9 @@ class StreamHelperTests {
 		StreamHelper streamHelper = new StreamHelper();
 		AtomicReference<ChatCompletionResponseBuilder> contentBlockReference = new AtomicReference<>();
 
-		Usage usage = new Usage(0, 0);
+		Usage usage = new Usage(0, 0, null, null);
 		ChatCompletionResponse message = new ChatCompletionResponse("msg-1", "message", Role.ASSISTANT, List.of(),
-				"claude-3-5-sonnet", null, null, usage);
+				"claude-3-5-sonnet", null, null, usage, null);
 		MessageStartEvent startEvent = new MessageStartEvent(AnthropicApi.EventType.MESSAGE_START, message);
 		streamHelper.eventToChatCompletionResponse(startEvent, contentBlockReference);
 
@@ -218,9 +218,9 @@ class StreamHelperTests {
 		StreamHelper streamHelper = new StreamHelper();
 		AtomicReference<ChatCompletionResponseBuilder> contentBlockReference = new AtomicReference<>();
 
-		Usage usage = new Usage(0, 0);
+		Usage usage = new Usage(0, 0, null, null);
 		ChatCompletionResponse message = new ChatCompletionResponse("msg-1", "message", Role.ASSISTANT, List.of(),
-				"claude-3-5-sonnet", null, null, usage);
+				"claude-3-5-sonnet", null, null, usage, null);
 		MessageStartEvent startEvent = new MessageStartEvent(AnthropicApi.EventType.MESSAGE_START, message);
 		streamHelper.eventToChatCompletionResponse(startEvent, contentBlockReference);
 
@@ -269,9 +269,9 @@ class StreamHelperTests {
 		StreamHelper streamHelper = new StreamHelper();
 		AtomicReference<ChatCompletionResponseBuilder> contentBlockReference = new AtomicReference<>();
 
-		Usage usage = new Usage(0, 0);
+		Usage usage = new Usage(0, 0, null, null);
 		ChatCompletionResponse message = new ChatCompletionResponse("msg-1", "message", Role.ASSISTANT, List.of(),
-				"claude-3-5-sonnet", null, null, usage);
+				"claude-3-5-sonnet", null, null, usage, null);
 		MessageStartEvent startEvent = new MessageStartEvent(AnthropicApi.EventType.MESSAGE_START, message);
 		streamHelper.eventToChatCompletionResponse(startEvent, contentBlockReference);
 
@@ -296,9 +296,9 @@ class StreamHelperTests {
 		StreamHelper streamHelper = new StreamHelper();
 		AtomicReference<ChatCompletionResponseBuilder> contentBlockReference = new AtomicReference<>();
 
-		Usage usage = new Usage(0, 0);
+		Usage usage = new Usage(0, 0, null, null);
 		ChatCompletionResponse message = new ChatCompletionResponse("msg-1", "message", Role.ASSISTANT, List.of(),
-				"claude-3-5-sonnet", null, null, usage);
+				"claude-3-5-sonnet", null, null, usage, null);
 		MessageStartEvent startEvent = new MessageStartEvent(AnthropicApi.EventType.MESSAGE_START, message);
 		streamHelper.eventToChatCompletionResponse(startEvent, contentBlockReference);
 
@@ -321,9 +321,9 @@ class StreamHelperTests {
 		StreamHelper streamHelper = new StreamHelper();
 		AtomicReference<ChatCompletionResponseBuilder> contentBlockReference = new AtomicReference<>();
 
-		Usage usage = new Usage(0, 0);
+		Usage usage = new Usage(0, 0, null, null);
 		ChatCompletionResponse message = new ChatCompletionResponse("msg-1", "message", Role.ASSISTANT, List.of(),
-				"claude-3-5-sonnet", null, null, usage);
+				"claude-3-5-sonnet", null, null, usage, null);
 		MessageStartEvent startEvent = new MessageStartEvent(AnthropicApi.EventType.MESSAGE_START, message);
 		streamHelper.eventToChatCompletionResponse(startEvent, contentBlockReference);
 
@@ -346,9 +346,9 @@ class StreamHelperTests {
 		StreamHelper streamHelper = new StreamHelper();
 		AtomicReference<ChatCompletionResponseBuilder> contentBlockReference = new AtomicReference<>();
 
-		Usage usage = new Usage(0, 0);
+		Usage usage = new Usage(0, 0, null, null);
 		ChatCompletionResponse message = new ChatCompletionResponse("msg-1", "message", Role.ASSISTANT, List.of(),
-				"claude-3-5-sonnet", null, null, usage);
+				"claude-3-5-sonnet", null, null, usage, null);
 		MessageStartEvent startEvent = new MessageStartEvent(AnthropicApi.EventType.MESSAGE_START, message);
 		streamHelper.eventToChatCompletionResponse(startEvent, contentBlockReference);
 
@@ -365,9 +365,9 @@ class StreamHelperTests {
 		StreamHelper streamHelper = new StreamHelper();
 		AtomicReference<ChatCompletionResponseBuilder> contentBlockReference = new AtomicReference<>();
 
-		Usage usage = new Usage(0, 0);
+		Usage usage = new Usage(0, 0, null, null);
 		ChatCompletionResponse message = new ChatCompletionResponse("msg-1", "message", Role.ASSISTANT, List.of(),
-				"claude-3-5-sonnet", null, null, usage);
+				"claude-3-5-sonnet", null, null, usage, null);
 		MessageStartEvent startEvent = new MessageStartEvent(AnthropicApi.EventType.MESSAGE_START, message);
 		streamHelper.eventToChatCompletionResponse(startEvent, contentBlockReference);
 
@@ -386,9 +386,9 @@ class StreamHelperTests {
 		StreamHelper streamHelper = new StreamHelper();
 		AtomicReference<ChatCompletionResponseBuilder> contentBlockReference = new AtomicReference<>();
 
-		Usage usage = new Usage(0, 0);
+		Usage usage = new Usage(0, 0, null, null);
 		ChatCompletionResponse message = new ChatCompletionResponse("msg-1", "message", Role.ASSISTANT, List.of(),
-				"claude-3-5-sonnet", null, null, usage);
+				"claude-3-5-sonnet", null, null, usage, null);
 		MessageStartEvent startEvent = new MessageStartEvent(AnthropicApi.EventType.MESSAGE_START, message);
 		streamHelper.eventToChatCompletionResponse(startEvent, contentBlockReference);
 
@@ -407,9 +407,9 @@ class StreamHelperTests {
 		StreamHelper streamHelper = new StreamHelper();
 		AtomicReference<ChatCompletionResponseBuilder> contentBlockReference = new AtomicReference<>();
 
-		Usage usage = new Usage(0, 0);
+		Usage usage = new Usage(0, 0, null, null);
 		ChatCompletionResponse message = new ChatCompletionResponse("msg-1", "message", Role.ASSISTANT, List.of(),
-				"claude-3-5-sonnet", null, null, usage);
+				"claude-3-5-sonnet", null, null, usage, null);
 		MessageStartEvent startEvent = new MessageStartEvent(AnthropicApi.EventType.MESSAGE_START, message);
 		streamHelper.eventToChatCompletionResponse(startEvent, contentBlockReference);
 

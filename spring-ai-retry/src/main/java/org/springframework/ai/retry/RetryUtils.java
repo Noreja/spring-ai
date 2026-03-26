@@ -57,6 +57,7 @@ public abstract class RetryUtils {
 			handleError(response);
 		}
 
+		@Override
 		@SuppressWarnings("removal")
 		public void handleError(@NonNull ClientHttpResponse response) throws IOException {
 			if (response.getStatusCode().isError()) {
@@ -82,13 +83,13 @@ public abstract class RetryUtils {
 		.maxAttempts(10)
 		.retryOn(TransientAiException.class)
 		.retryOn(ResourceAccessException.class)
-		.exponentialBackoff(Duration.ofMillis(2000), 5, Duration.ofMillis(3 * 60000))
+		.exponentialBackoff(Duration.ofMillis(2000), 5, Duration.ofMillis(3 * 60000L))
 		.withListener(new RetryListener() {
 
 			@Override
 			public <T extends Object, E extends Throwable> void onError(RetryContext context,
 					RetryCallback<T, E> callback, Throwable throwable) {
-				logger.warn("Retry error. Retry count:" + context.getRetryCount(), throwable);
+				logger.warn("Retry error. Retry count:{}", context.getRetryCount(), throwable);
 			}
 		})
 		.build();
@@ -107,7 +108,7 @@ public abstract class RetryUtils {
 			@Override
 			public <T extends Object, E extends Throwable> void onError(RetryContext context,
 					RetryCallback<T, E> callback, Throwable throwable) {
-				logger.warn("Retry error. Retry count:" + context.getRetryCount());
+				logger.warn("Retry error. Retry count:{}", context.getRetryCount());
 			}
 		})
 		.build();

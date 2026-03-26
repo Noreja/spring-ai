@@ -43,7 +43,7 @@ public class ZhiPuAiImageApi {
 
 	/**
 	 * Create a new ZhiPuAI Image api with base URL set to
-	 * {@code https://api.ZhiPuAI.com}.
+	 * {@code https://open.bigmodel.cn/api/paas}.
 	 * @param zhiPuAiToken ZhiPuAI apiKey.
 	 */
 	public ZhiPuAiImageApi(String zhiPuAiToken) {
@@ -124,7 +124,7 @@ public class ZhiPuAiImageApi {
 		@JsonProperty("created") Long created,
 		@JsonProperty("data") List<Data> data) {
 	}
-	// @formatter:onn
+	// @formatter:on
 
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	@JsonIgnoreProperties(ignoreUnknown = true)

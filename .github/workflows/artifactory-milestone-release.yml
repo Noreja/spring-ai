@@ -15,10 +15,10 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           cache: 'maven'
 
@@ -26,7 +26,9 @@ jobs:
         run: echo RELEASE_VERSION=${{ github.event.inputs.releaseVersion }} >> $GITHUB_ENV
 
       - name: Update release version
-        run: mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$RELEASE_VERSION
+        run: |
+          mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$RELEASE_VERSION
+          mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$RELEASE_VERSION -pl spring-ai-bom
 
       - name: Enforce release rules
         run: mvn org.apache.maven.plugins:maven-enforcer-plugin:enforce -Drules=requireReleaseDeps

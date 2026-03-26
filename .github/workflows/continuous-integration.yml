@@ -1,21 +1,20 @@
 name: CI/CD build
 
 on:
-  schedule:
-    # Combined schedule covering both EST and CET working hours
-    # Morning/Early builds
-    - cron: '30 6 * * 1-5'   # 7:30 AM CET / 1:30 AM EST
-    - cron: '0 9 * * 1-5'    # 10:00 AM CET / 4:00 AM EST
-    - cron: '30 11 * * 1-5'  # 12:30 PM CET / 6:30 AM EST
-    # Midday builds
-    - cron: '0 14 * * 1-5'   # 3:00 PM CET / 9:00 AM EST
-    - cron: '30 16 * * 1-5'  # 5:30 PM CET / 11:30 AM EST
-    # Afternoon/Evening builds  
-    - cron: '0 19 * * 1-5'   # 8:00 PM CET / 2:00 PM EST
-    - cron: '30 21 * * 1-5'  # 10:30 PM CET / 4:30 PM EST
-    - cron: '0 0 * * 2-6'    # 1:00 AM CET / 7:00 PM EST (previous day)
-    - cron: '30 2 * * 2-6'   # 3:30 AM CET / 9:30 PM EST (previous day)
-  workflow_dispatch:
+  # DISABLED: Replaced by fast-continuous-integration.yml workflow
+  # This workflow is kept for reference but will not run automatically
+  # To re-enable, uncomment the schedule and workflow_dispatch sections below
+  workflow_call:  # Dummy trigger - workflow can only be called by other workflows (effectively disabled)
+  # schedule:
+  #   # Combined schedule covering both EST and CET working hours
+  #   # Morning/Early builds
+  #   - cron: '30 6 * * 1-5'   # 7:30 AM CET / 1:30 AM EST
+  #   - cron: '30 11 * * 1-5'  # 12:30 PM CET / 6:30 AM EST
+  #   # Midday builds
+  #   - cron: '30 16 * * 1-5'  # 7:30 PM CET / 11:30 AM EST
+  #   # Afternoon/Evening builds
+  #   - cron: '30 21 * * 1-5'  # 10:30 PM CET / 4:30 PM EST
+  # workflow_dispatch:
   # Note: If push triggers are added in the future, they should include:
   # push:
   #   paths-ignore:
@@ -29,12 +28,6 @@ jobs:
     name: Build branch
     runs-on: ubuntu-latest
     if: ${{ github.repository_owner == 'spring-projects' }}
-    permissions:
-      contents: read
-      actions: read
-    concurrency:
-      group: continuous-integration-${{ github.ref }}
-      cancel-in-progress: true  # Skip if another build is running - next cron will trigger soon
     services:
       ollama:
         image: ollama/ollama:latest
@@ -46,63 +39,20 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      # - name: Check for new commits since last build
-      #   id: changes
-      #   run: |
-      #     # Get the timestamp of the latest commit on this branch
-      #     LATEST_COMMIT_TIME=$(git log -1 --format="%ct" HEAD)
-      #     echo "Latest commit timestamp: $LATEST_COMMIT_TIME ($(date -d @$LATEST_COMMIT_TIME))"
-      #     
-      #     # Get the last successful build time using GitHub API
-      #     # Look for the most recent successful CI build on this branch
-      #     LAST_SUCCESS=$(curl -s \
-      #       -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-      #       -H "Accept: application/vnd.github.v3+json" \
-      #       "https://api.github.com/repos/${{ github.repository }}/actions/runs?branch=${{ github.ref_name }}&status=success&per_page=50" \
-      #       | jq -r '.workflow_runs[] | select(.name == "CI/CD build" and .conclusion == "success") | .created_at' \
-      #       | head -1)
-      #     
-      #     if [ -n "$LAST_SUCCESS" ] && [ "$LAST_SUCCESS" != "null" ]; then
-      #       LAST_SUCCESS_TIME=$(date -d "$LAST_SUCCESS" +%s)
-      #       echo "Last successful build: $LAST_SUCCESS_TIME ($(date -d @$LAST_SUCCESS_TIME))"
-      #       
-      #       if [ "$LATEST_COMMIT_TIME" -le "$LAST_SUCCESS_TIME" ]; then
-      #         echo "No new commits since last successful build - skipping"
-      #         echo "skip_build=true" >> $GITHUB_OUTPUT
-      #         exit 0
-      #       else
-      #         echo "New commits found since last successful build - proceeding"
-      #         echo "skip_build=false" >> $GITHUB_OUTPUT
-      #       fi
-      #     else
-      #       echo "No previous successful build found - proceeding with build"
-      #       echo "skip_build=false" >> $GITHUB_OUTPUT
-      #     fi
-
-      # - name: Build skipped - no new commits
-      #   if: steps.changes.outputs.skip_build == 'true'
-      #   run: |
-      #     echo "✅ CI/CD build skipped - no new commits since last successful build"
-      #     echo "This saves resources and reduces unnecessary builds"
-      #     echo "The next scheduled build will check again for new commits"
-
       - name: Free Disk Space
-        # if: steps.changes.outputs.skip_build != 'true'
         uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
         with:
           large-packages: false
           docker-images: false
 
       - name: Set up JDK 17
-        # if: steps.changes.outputs.skip_build != 'true'
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           cache: 'maven'
 
       - name: Configure Testcontainers
-        # if: steps.changes.outputs.skip_build != 'true'
         run: |
           echo "testcontainers.reuse.enable=true" > $HOME/.testcontainers.properties
 
@@ -112,7 +62,6 @@ jobs:
       #     key: docker-${{ runner.os }}-${{ hashFiles('**/OllamaImage.java') }}
 
       - name: Build and test with Maven
-        # if: steps.changes.outputs.skip_build != 'true'
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           SPRING_AI_OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -133,23 +82,19 @@ jobs:
 
       - name: Generate Java docs
         if: github.ref == 'refs/heads/main'
-        # if: github.ref == 'refs/heads/main' && steps.changes.outputs.skip_build != 'true'
         run: ./mvnw --batch-mode javadoc:aggregate
 
       - name: Generate assembly
         if: github.ref == 'refs/heads/main'
-        # if: github.ref == 'refs/heads/main' && steps.changes.outputs.skip_build != 'true'
         working-directory: spring-ai-docs
         run: ../mvnw --batch-mode assembly:single
 
       - name: Capture project version
         if: github.ref == 'refs/heads/main'
-        # if: github.ref == 'refs/heads/main' && steps.changes.outputs.skip_build != 'true'
         run: echo PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version --quiet -DforceStdout) >> $GITHUB_ENV
 
       - name: Setup SSH key
         if: github.ref == 'refs/heads/main'
-        # if: github.ref == 'refs/heads/main' && steps.changes.outputs.skip_build != 'true'
         env:
           DOCS_SSH_KEY: ${{ secrets.DOCS_SSH_KEY }}
           DOCS_SSH_HOST_KEY: ${{ secrets.DOCS_SSH_HOST_KEY }}
@@ -161,7 +106,6 @@ jobs:
 
       - name: Deploy docs
         if: github.ref == 'refs/heads/main'
-        # if: github.ref == 'refs/heads/main' && steps.changes.outputs.skip_build != 'true'
         env:
           DOCS_HOST: ${{ secrets.DOCS_HOST }}
           DOCS_PATH: ${{ secrets.DOCS_PATH }}

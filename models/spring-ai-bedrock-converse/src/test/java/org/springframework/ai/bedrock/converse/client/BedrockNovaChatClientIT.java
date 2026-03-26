@@ -38,6 +38,7 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.content.Media;
+import org.springframework.ai.model.tool.ToolCallingChatOptions;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.function.FunctionToolCallback;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -190,13 +191,13 @@ public class BedrockNovaChatClientIT {
 
 	// https://github.com/spring-projects/spring-ai/issues/1878
 	@ParameterizedTest
-	@ValueSource(strings = { "amazon.nova-pro-v1:0", "us.anthropic.claude-3-7-sonnet-20250219-v1:0" })
+	@ValueSource(strings = { "us.amazon.nova-pro-v1:0", "us.anthropic.claude-3-7-sonnet-20250219-v1:0" })
 	void toolAnnotationWeatherForecastStreaming(String modelName) {
 
 		ChatClient chatClient = ChatClient.builder(this.chatModel).build();
 
 		Flux<ChatResponse> responses = chatClient.prompt()
-			.options(BedrockChatOptions.builder().model(modelName).build())
+			.options(ToolCallingChatOptions.builder().model(modelName).build())
 			.tools(new DummyWeatherForecastTools())
 			.user("Get current weather in Amsterdam")
 			.stream()
@@ -261,7 +262,7 @@ public class BedrockNovaChatClientIT {
 		@Bean
 		public BedrockProxyChatModel bedrockConverseChatModel() {
 
-			String modelId = "amazon.nova-pro-v1:0";
+			String modelId = "us.amazon.nova-pro-v1:0";
 			// String modelId = "us.anthropic.claude-3-7-sonnet-20250219-v1:0";
 
 			return BedrockProxyChatModel.builder()
@@ -283,7 +284,7 @@ public class BedrockNovaChatClientIT {
 	public static class DummyWeatherForecastTools {
 
 		@Tool(description = "Get the current weather forecast in Amsterdam")
-		String getCurrentDateTime() {
+		String getCurrentWeather() {
 			return "Weather is hot and sunny with a temperature of 20 degrees";
 		}
 

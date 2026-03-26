@@ -19,7 +19,6 @@ package org.springframework.ai.openai.chat;
 import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.observation.ObservationRegistry;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,7 +43,6 @@ import org.springframework.ai.retry.RetryUtils;
 import org.springframework.retry.support.RetryTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.BDDMockito.given;
@@ -126,7 +124,8 @@ public class OpenAiStreamingFinishReasonTests {
 						"index": 0,
 						"delta": {
 							"role": "assistant",
-							"content": ""
+							"content": "",
+							"reasoning_content": ""
 						},
 						"finish_reason": ""
 					}]
@@ -144,10 +143,7 @@ public class OpenAiStreamingFinishReasonTests {
 		assertThat(choice.index()).isEqualTo(0);
 		assertThat(choice.delta().content()).isEmpty();
 
-		// The key test: what happens with empty string finish_reason?
-		// This might be null if Jackson handles empty string -> enum conversion
-		// gracefully
-		assertThat(choice.finishReason()).isNull();
+		assertThat(choice.finishReason()).isEqualTo(ChatCompletionFinishReason.UNKNOWN);
 	}
 
 	@Test
@@ -163,7 +159,8 @@ public class OpenAiStreamingFinishReasonTests {
 						"index": 0,
 						"delta": {
 							"role": "assistant",
-							"content": "Hello"
+							"content": "Hello",
+							"reasoning_content": "test"
 						},
 						"finish_reason": null
 					}]
@@ -178,6 +175,7 @@ public class OpenAiStreamingFinishReasonTests {
 		var choice = chunk.choices().get(0);
 		assertThat(choice.finishReason()).isNull();
 		assertThat(choice.delta().content()).isEqualTo("Hello");
+		assertThat(choice.delta().reasoningContent()).isEqualTo("test");
 	}
 
 	@Test
@@ -244,7 +242,7 @@ public class OpenAiStreamingFinishReasonTests {
 
 		var choice = chunk.choices().get(0);
 		// The critical test: how does ModelOptionsUtils handle empty string -> enum?
-		assertThat(choice.finishReason()).isNull();
+		assertThat(choice.finishReason()).isEqualTo(ChatCompletionFinishReason.UNKNOWN);
 	}
 
 	private void setupChatModel() {
