@@ -144,7 +144,11 @@ public final class VectorStoreChatMemoryAdvisor implements BaseChatMemoryAdvisor
 		String query = request.prompt().getUserMessage() != null ? request.prompt().getUserMessage().getText() : "";
 		int topK = getChatMemoryTopK(request.context());
 		var filterExpression = aggregateFilterExpression(conversationId);
-		SearchRequest searchRequest = SearchRequest.builder().query(query).topK(topK).filterExpression(filterExpression).build();
+		SearchRequest searchRequest = SearchRequest.builder()
+			.query(query)
+			.topK(topK)
+			.filterExpression(filterExpression)
+			.build();
 		List<Document> documents = this.vectorStore.similaritySearch(searchRequest);
 
 		String longTermMemory = documents == null ? ""

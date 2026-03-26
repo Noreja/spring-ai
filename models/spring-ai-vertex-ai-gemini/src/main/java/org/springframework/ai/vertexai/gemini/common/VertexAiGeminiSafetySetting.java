@@ -22,10 +22,6 @@ public final class VertexAiGeminiSafetySetting {
 		return new Builder();
 	}
 
-	public static Builder builder() {
-		return new Builder();
-	}
-
 	/**
 	 * Enum representing different threshold levels for blocking harmful content.
 	 */

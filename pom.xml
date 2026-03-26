@@ -21,7 +21,7 @@
 
 	<groupId>org.springframework.ai</groupId>
 	<artifactId>spring-ai-parent</artifactId>
-	<version>1.1.2</version>
+	<version>1.1.2-noreja-SNAPSHOT</version>
 
 	<packaging>pom</packaging>
 	<url>https://github.com/spring-projects/spring-ai</url>
@@ -252,12 +252,13 @@
 	</ciManagement>
 	<distributionManagement>
 		<snapshotRepository>
-			<id>spring-snapshots</id>
-			<url>https://repo.spring.io/libs-snapshot-local</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
+			<id>artifact-snapshot-registry</id>
+			<url>artifactregistry://europe-west3-maven.pkg.dev/theta-citron-479412-e0/noreja-maven-snapshots</url>
 		</snapshotRepository>
+		<repository>
+			<id>artifact-registry</id>
+			<url>artifactregistry://europe-west3-maven.pkg.dev/theta-citron-479412-e0/noreja-maven-release</url>
+		</repository>
 	</distributionManagement>
 	<licenses>
 		<license>
@@ -373,6 +374,15 @@
 	</properties>
 
 	<build>
+		<extensions xmlns="http://maven.apache.org/EXTENSIONS/1.0.0"
+					xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+					xsi:schemaLocation="http://maven.apache.org/EXTENSIONS/1.0.0 http://maven.apache.org/xsd/core-extensions-1.0.0.xsd">
+			<extension>
+				<groupId>com.google.cloud.artifactregistry</groupId>
+				<artifactId>artifactregistry-maven-wagon</artifactId>
+				<version>2.2.5</version>
+			</extension>
+		</extensions>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
