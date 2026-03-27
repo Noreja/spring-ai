@@ -260,9 +260,28 @@ public class OpenAiSdkResponsesModel implements ChatModel {
 						else if (event.isCompleted()) {
 							ResponseCompletedEvent completed = event.asCompleted();
 							Response apiResponse = completed.response();
-							ChatResponse chatResponse = processResponse(apiResponse, previousChatResponse);
-							observationContext.setResponse(chatResponse);
-							sink.next(chatResponse);
+							// Build a final response with only tool calls and
+							// usage/metadata — text was already streamed via deltas
+							ChatResponse fullResponse = processResponse(apiResponse, previousChatResponse);
+							observationContext.setResponse(fullResponse);
+
+							// Extract tool calls from the full response
+							AssistantMessage fullMsg = fullResponse.getResult() != null
+									? fullResponse.getResult().getOutput() : null;
+							List<AssistantMessage.ToolCall> completedToolCalls = fullMsg != null
+									? fullMsg.getToolCalls() : List.of();
+
+							// Emit a metadata-only response (empty text) with usage and
+							// any tool calls
+							AssistantMessage metaMessage = AssistantMessage.builder()
+								.content("")
+								.toolCalls(completedToolCalls)
+								.properties(fullMsg != null ? fullMsg.getMetadata() : Map.of())
+								.build();
+							Generation metaGen = new Generation(metaMessage,
+									fullResponse.getResult() != null ? fullResponse.getResult().getMetadata()
+											: ChatGenerationMetadata.builder().build());
+							sink.next(new ChatResponse(List.of(metaGen), fullResponse.getMetadata()));
 						}
 					}
 					catch (Exception e) {
