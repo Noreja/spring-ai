@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openai.client.OpenAIClient;
@@ -311,41 +312,40 @@ public class OpenAiSdkResponsesModel implements ChatModel {
 			Flux<ChatResponse> flux = chatResponses
 				.contextWrite(ctx -> ctx.put(ObservationThreadLocalAccessor.KEY, observation));
 
-			return flux.collectList().flatMapMany(list -> {
-				if (list.isEmpty()) {
+			// Stream text deltas through immediately. The final completed
+			// event (last element) may contain tool calls that require
+			// execution and a recursive internalStream call.
+			AtomicReference<ChatResponse> lastResponse = new AtomicReference<>();
+			return flux.doOnNext(lastResponse::set).concatWith(Flux.defer(() -> {
+				ChatResponse completed = lastResponse.get();
+				if (completed == null) {
 					return Flux.empty();
 				}
-
-				// Check if any response in the stream contains function tool calls
-				boolean hasToolCalls = list.stream()
-					.map(this::safeAssistantMessage)
-					.filter(Objects::nonNull)
-					.anyMatch(am -> !CollectionUtils.isEmpty(am.getToolCalls()));
-
-				if (hasToolCalls) {
-					// Find the final complete response (last one with tool calls)
-					ChatResponse aggregated = list.get(list.size() - 1);
-					return Flux.deferContextual(ctx -> {
-						ToolExecutionResult toolExecutionResult;
-						try {
-							ToolCallReactiveContextHolder.setContext(ctx);
-							toolExecutionResult = this.toolCallingManager.executeToolCalls(prompt, aggregated);
-						}
-						finally {
-							ToolCallReactiveContextHolder.clearContext();
-						}
-						if (toolExecutionResult.returnDirect()) {
-							return Flux.just(ChatResponse.builder()
-								.from(aggregated)
-								.generations(ToolExecutionResult.buildGenerations(toolExecutionResult))
-								.build());
-						}
-						return this.internalStream(
-								new Prompt(toolExecutionResult.conversationHistory(), prompt.getOptions()), aggregated);
-					}).subscribeOn(Schedulers.boundedElastic());
+				AssistantMessage msg = safeAssistantMessage(completed);
+				if (msg == null || CollectionUtils.isEmpty(msg.getToolCalls())) {
+					return Flux.empty();
 				}
-				return Flux.fromIterable(list);
-			}).doOnError(observation::error).doFinally(s -> observation.stop());
+				// Tool calls detected — execute and continue the
+				// conversation
+				return Flux.deferContextual(ctx -> {
+					ToolExecutionResult toolExecutionResult;
+					try {
+						ToolCallReactiveContextHolder.setContext(ctx);
+						toolExecutionResult = this.toolCallingManager.executeToolCalls(prompt, completed);
+					}
+					finally {
+						ToolCallReactiveContextHolder.clearContext();
+					}
+					if (toolExecutionResult.returnDirect()) {
+						return Flux.just(ChatResponse.builder()
+							.from(completed)
+							.generations(ToolExecutionResult.buildGenerations(toolExecutionResult))
+							.build());
+					}
+					return this.internalStream(
+							new Prompt(toolExecutionResult.conversationHistory(), prompt.getOptions()), completed);
+				}).subscribeOn(Schedulers.boundedElastic());
+			})).doOnError(observation::error).doFinally(s -> observation.stop());
 		});
 	}
 
