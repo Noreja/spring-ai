@@ -43,6 +43,7 @@ import com.openai.models.responses.ResponseInputImage;
 import com.openai.models.responses.ResponseInputItem;
 import com.openai.models.responses.ResponseInputText;
 import com.openai.models.responses.ResponseOutputItem;
+import com.openai.models.responses.ResponseOutputItemAddedEvent;
 import com.openai.models.responses.ResponseOutputMessage;
 import com.openai.models.responses.ResponseOutputText;
 import com.openai.models.responses.ResponseReasoningItem;
@@ -251,11 +252,20 @@ public class OpenAiSdkResponsesModel implements ChatModel {
 							functionCallArgs.computeIfAbsent(itemId, k -> new StringBuilder())
 								.append(argsDelta.delta());
 						}
+						else if (event.isOutputItemAdded()) {
+							ResponseOutputItemAddedEvent itemAdded = event.asOutputItemAdded();
+							ResponseOutputItem item = itemAdded.item();
+							if (item.isFunctionCall()) {
+								ResponseFunctionToolCall fc = item.asFunctionCall();
+								functionCallNames.put(fc.id().orElse(fc.callId()), fc.name());
+								functionCallIds.put(fc.id().orElse(fc.callId()), fc.callId());
+							}
+						}
 						else if (event.isFunctionCallArgumentsDone()) {
 							ResponseFunctionCallArgumentsDoneEvent argsDone = event.asFunctionCallArgumentsDone();
 							String itemId = argsDone.itemId();
-							functionCallNames.put(itemId, argsDone.name());
-							functionCallIds.put(itemId, argsDone.itemId());
+							argsDone._name().asKnown().ifPresent(name -> functionCallNames.put(itemId, name));
+							functionCallIds.putIfAbsent(itemId, argsDone.itemId());
 						}
 						else if (event.isCompleted()) {
 							ResponseCompletedEvent completed = event.asCompleted();
