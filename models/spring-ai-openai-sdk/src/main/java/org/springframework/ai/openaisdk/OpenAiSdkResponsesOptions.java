@@ -53,6 +53,8 @@ public class OpenAiSdkResponsesOptions extends AbstractOpenAiSdkOptions implemen
 
 	private Boolean parallelToolCalls;
 
+	private Boolean strictTools;
+
 	private String user;
 
 	private String serviceTier;
@@ -143,6 +145,21 @@ public class OpenAiSdkResponsesOptions extends AbstractOpenAiSdkOptions implemen
 
 	public void setParallelToolCalls(Boolean parallelToolCalls) {
 		this.parallelToolCalls = parallelToolCalls;
+	}
+
+	/**
+	 * Whether OpenAI's strict-mode JSON schema validation is requested for function tool
+	 * definitions. When {@code true}, every property in the schema must appear in the
+	 * {@code required} array; this conflicts with {@code @ToolParam(required = false)} on
+	 * MCP tools that legitimately expose optional parameters. When {@code null}, the
+	 * implementation falls back to its built-in default ({@code true}).
+	 */
+	public Boolean getStrictTools() {
+		return this.strictTools;
+	}
+
+	public void setStrictTools(Boolean strictTools) {
+		this.strictTools = strictTools;
 	}
 
 	public String getUser() {
@@ -306,9 +323,9 @@ public class OpenAiSdkResponsesOptions extends AbstractOpenAiSdkOptions implemen
 				&& Objects.equals(this.maxCompletionTokens, that.maxCompletionTokens)
 				&& Objects.equals(this.stop, that.stop) && Objects.equals(this.reasoningEffort, that.reasoningEffort)
 				&& Objects.equals(this.parallelToolCalls, that.parallelToolCalls)
-				&& Objects.equals(this.user, that.user) && Objects.equals(this.serviceTier, that.serviceTier)
-				&& Objects.equals(this.metadata, that.metadata) && Objects.equals(this.store, that.store)
-				&& Objects.equals(this.builtInTools, that.builtInTools)
+				&& Objects.equals(this.strictTools, that.strictTools) && Objects.equals(this.user, that.user)
+				&& Objects.equals(this.serviceTier, that.serviceTier) && Objects.equals(this.metadata, that.metadata)
+				&& Objects.equals(this.store, that.store) && Objects.equals(this.builtInTools, that.builtInTools)
 				&& Objects.equals(this.webSearchOptions, that.webSearchOptions)
 				&& Objects.equals(this.previousResponseId, that.previousResponseId)
 				&& Objects.equals(this.instructions, that.instructions)
@@ -322,10 +339,10 @@ public class OpenAiSdkResponsesOptions extends AbstractOpenAiSdkOptions implemen
 	@Override
 	public int hashCode() {
 		return Objects.hash(this.getModel(), this.temperature, this.topP, this.maxCompletionTokens, this.stop,
-				this.reasoningEffort, this.parallelToolCalls, this.user, this.serviceTier, this.metadata, this.store,
-				this.builtInTools, this.webSearchOptions, this.previousResponseId, this.instructions, this.truncation,
-				this.toolChoice, this.toolCallbacks, this.toolNames, this.internalToolExecutionEnabled,
-				this.toolContext);
+				this.reasoningEffort, this.parallelToolCalls, this.strictTools, this.user, this.serviceTier,
+				this.metadata, this.store, this.builtInTools, this.webSearchOptions, this.previousResponseId,
+				this.instructions, this.truncation, this.toolChoice, this.toolCallbacks, this.toolNames,
+				this.internalToolExecutionEnabled, this.toolContext);
 	}
 
 	public static final class Builder {
@@ -353,6 +370,7 @@ public class OpenAiSdkResponsesOptions extends AbstractOpenAiSdkOptions implemen
 			this.options.setStop(fromOptions.getStop() != null ? new ArrayList<>(fromOptions.getStop()) : null);
 			this.options.setReasoningEffort(fromOptions.getReasoningEffort());
 			this.options.setParallelToolCalls(fromOptions.getParallelToolCalls());
+			this.options.setStrictTools(fromOptions.getStrictTools());
 			this.options.setUser(fromOptions.getUser());
 			this.options.setServiceTier(fromOptions.getServiceTier());
 			this.options.setMetadata(fromOptions.getMetadata());
@@ -424,6 +442,9 @@ public class OpenAiSdkResponsesOptions extends AbstractOpenAiSdkOptions implemen
 			}
 			if (from.getParallelToolCalls() != null) {
 				this.options.setParallelToolCalls(from.getParallelToolCalls());
+			}
+			if (from.getStrictTools() != null) {
+				this.options.setStrictTools(from.getStrictTools());
 			}
 			if (from.getUser() != null) {
 				this.options.setUser(from.getUser());
@@ -517,6 +538,11 @@ public class OpenAiSdkResponsesOptions extends AbstractOpenAiSdkOptions implemen
 
 		public Builder parallelToolCalls(Boolean parallelToolCalls) {
 			this.options.setParallelToolCalls(parallelToolCalls);
+			return this;
+		}
+
+		public Builder strictTools(Boolean strictTools) {
+			this.options.setStrictTools(strictTools);
 			return this;
 		}
 

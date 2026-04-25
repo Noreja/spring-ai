@@ -607,11 +607,12 @@ public class OpenAiSdkResponsesModel implements ChatModel {
 		// Add function tools from ToolCallingManager
 		List<ToolDefinition> toolDefinitions = this.toolCallingManager.resolveToolDefinitions(requestOptions);
 		if (!CollectionUtils.isEmpty(toolDefinitions)) {
+			boolean strictTools = requestOptions.getStrictTools() == null || requestOptions.getStrictTools();
 			for (ToolDefinition toolDef : toolDefinitions) {
 				FunctionTool.Builder functionToolBuilder = FunctionTool.builder()
 					.name(toolDef.name())
 					.description(toolDef.description())
-					.strict(true);
+					.strict(strictTools);
 
 				if (StringUtils.hasText(toolDef.inputSchema())) {
 					try {
