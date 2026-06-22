@@ -12,23 +12,6 @@ This section covers all breaking changes and migration steps when upgrading from
 
 The `spring-ai-advisors-vector-store` module has been renamed to `spring-ai-vector-store-advisor` to better align with the naming conventions of other Spring AI modules.
 
-==== `ToolSearchToolCallingAdvisor` moved to `spring-ai-tool-search-advisor`
-
-The `ToolSearchToolCallingAdvisor` class has been moved to a dedicated module and package:
-
-* *Artifact:* `spring-ai-tool-search-advisor` (previously bundled in `spring-ai-tool-search-tool`)
-* *Package:* `org.springframework.ai.chat.client.advisor.toolsearch` (previously `org.springframework.ai.tool.toolsearch.advisor`)
-
-Update your dependency and import statements accordingly:
-
-[source,xml]
-----
-<dependency>
-    <groupId>org.springframework.ai</groupId>
-    <artifactId>spring-ai-tool-search-advisor</artifactId>
-</dependency>
-----
-
 ==== New: `ToolSearchToolCallingAdvisor` Auto-Configuration and Starter
 
 A Spring Boot auto-configuration (`spring-ai-autoconfigure-tool-search-advisor`) and matching starter (`spring-ai-starter-tool-search-advisor`) are now available.
@@ -76,6 +59,7 @@ var chatMemoryAdvisor = MessageChatMemoryAdvisor.builder(chatMemory)
 
 TIP: The https://github.com/spring-ai-community/spring-ai-session[spring-ai-session] community project provides a session-aware memory implementation that fully supports tool-call messages and can be safely used inside the tool-call loop with any backend. It is planned to replace `ChatMemory` in Spring AI 2.1. See the https://spring-ai-community.github.io/spring-ai-session/latest-snapshot/[spring-ai-session documentation] for details.
 
+[[tool-calling-1x-to-2x]]
 === Tool Calling
 
 ==== Removed: `internalToolExecutionEnabled` from `ToolCallingChatOptions`
@@ -220,10 +204,174 @@ while (response.chatResponse() != null && response.chatResponse().hasToolCalls()
 // forward or process the final answer here
 ----
 
-For a complete example including the streaming path, see xref:api/tools.adoc#_user_controlled_tool_execution[User-Controlled Tool Execution — With ChatClient].
+For a complete example including the streaming path, see xref:api/tools.adoc#user-controlled-tool-execution[User-Controlled Tool Execution — With ChatClient].
 
+==== Removed: Internal Tool Execution Loop in `ChatModel`
 
+In Spring AI 1.x, every `ChatModel` implementation contained its own internal tool-execution loop: calling `chatModel.call(prompt)` with tools would execute any tool calls in the response and re-call the model automatically, looping until the model produced a non-tool-call response.
 
+In 2.0, this internal loop has been removed from every `ChatModel` implementation (OpenAI, Anthropic, Ollama, DeepSeek, Bedrock, MiniMax, Mistral, Google GenAI). `ChatModel.call(prompt)` and `ChatModel.stream(prompt)` now return the model's raw response — tool calls are not executed automatically.
+
+===== Impact
+
+Code that called `ChatModel` directly with tools and relied on automatic execution now receives the model's tool call request in the response without it being executed.
+
+===== Migration
+
+For most applications, switch to `ChatClient`. The auto-registered `ToolCallingAdvisor` runs the loop for you:
+
+[source,java]
+----
+ChatClient.create(chatModel)
+    .prompt(question)
+    .tools(new MyTools())
+    .call()
+    .content();
+----
+
+When you genuinely need `ChatModel` directly (custom orchestrator, infrastructure code), drive the loop manually with `ToolCallingManager`. See xref:api/tools/chatmodel-tool-calling.adoc#driving-the-loop-manually[ChatModel Tool Calling: Driving the Loop Manually].
+
+==== Removed: `SpringBeanToolCallbackResolver` and `toolNames()`
+
+`SpringBeanToolCallbackResolver` and the `toolNames()` API — which resolved tools from bare `Function`/`Supplier`/`Consumer` beans by name — have been removed. Tools must now be registered as explicit `ToolCallback` instances or `@Tool`-annotated objects.
+
+===== Impact
+
+Code that declared `Function` beans and referenced them by name via `toolNames(...)` will no longer compile or resolve.
+
+===== Migration
+
+Declare a `ToolCallback` bean directly (for function-style tools, use `FunctionToolCallback.builder()`):
+
+[source,java]
+----
+// Before (1.x) — bare Function bean resolved by name
+@Bean
+@Description("Get the weather in location")
+Function<WeatherRequest, WeatherResponse> currentWeather() {
+    return weatherService::getWeather;
+}
+chatClient.prompt().toolNames("currentWeather"); // no longer exists
+
+// After (2.0) — explicit ToolCallback bean
+@Bean
+ToolCallback currentWeather() {
+    return FunctionToolCallback.builder("currentWeather", weatherService::getWeather)
+        .description("Get the weather in location")
+        .inputType(WeatherRequest.class)
+        .build();
+}
+
+@Autowired ToolCallback currentWeather;
+
+chatClient.prompt()
+    .user("What's the weather in Copenhagen?")
+    .tools(currentWeather)
+    .call()
+    .content();
+----
+
+Method-based tools can also be declared with `@Tool`:
+
+[source,java]
+----
+class WeatherTools {
+    @Tool(description = "Get the weather in location")
+    WeatherResponse currentWeather(WeatherRequest request) {
+        return weatherService.getWeather(request);
+    }
+}
+
+chatClient.prompt().tools(new WeatherTools()).call().content();
+----
+
+==== Renamed: `ToolCallAdvisor` → `ToolCallingAdvisor`
+
+The recursive tool-calling advisor class has been renamed for precision. If you referenced `ToolCallAdvisor` directly (for example, by registering a custom instance or extending it), update the reference to `ToolCallingAdvisor`.
+
+[source,java]
+----
+// Before (1.x)
+var advisor = ToolCallAdvisor.builder()...;
+
+// After (2.0)
+var advisor = ToolCallingAdvisor.builder()...;
+----
+
+==== Renamed: `FunctionCallback` API → `ToolCallback` API
+
+Spring AI 1.0 introduced `ToolCallback` as the replacement for the older `FunctionCallback` API; 2.0 removes the deprecated `FunctionCallback` types and methods entirely. The terminology is now consistent — "tools" everywhere, "functions" nowhere.
+
+If you're upgrading from a version that still used the legacy `FunctionCallback` API:
+
+[cols="3,3", options="header"]
+|====
+| Before (legacy) | After (2.0)
+| `FunctionCallback` | `ToolCallback`
+| `FunctionCallback.builder().function(name, fn)` | `FunctionToolCallback.builder(name, fn)`
+| `FunctionCallback.builder().method(...)` | `MethodToolCallback.builder()` with `ToolDefinition`
+| `FunctionCallingOptions` | `ToolCallingChatOptions`
+| `FunctionCallingOptions.builder().functionCallbacks(...)` | `ToolCallingChatOptions.builder().toolCallbacks(...)`
+| `ChatClient.Builder#defaultFunctions(...)` | `ChatClient.Builder#defaultTools(...)`
+| `ChatClient.prompt().functions(...)` | `ChatClient.prompt().tools(...)`
+|====
+
+Examples:
+
+[source,java]
+----
+// Before — function-style callback
+FunctionCallback.builder()
+    .function("getCurrentWeather", new MockWeatherService())
+    .description("Get the weather in location")
+    .inputType(MockWeatherService.Request.class)
+    .build();
+
+// After — explicit ToolCallback via FunctionToolCallback
+FunctionToolCallback.builder("getCurrentWeather", new MockWeatherService())
+    .description("Get the weather in location")
+    .inputType(MockWeatherService.Request.class)
+    .build();
+----
+
+[source,java]
+----
+// Before — defaultFunctions in builder
+ChatClient.builder(chatModel)
+    .defaultFunctions(
+        FunctionCallback.builder()
+            .function("WeatherInfo", new MockWeatherService())
+            .description("Get the current weather")
+            .inputType(MockWeatherService.Request.class)
+            .build())
+    .build();
+
+// After — defaultTools in builder
+ChatClient.builder(chatModel)
+    .defaultTools(
+        FunctionToolCallback.builder("WeatherInfo", new MockWeatherService())
+            .description("Get the current weather")
+            .inputType(MockWeatherService.Request.class)
+            .build())
+    .build();
+----
+
+[source,java]
+----
+// Before — per-call functions()
+chatClient.prompt()
+    .user("...")
+    .functions(callback)
+    .call();
+
+// After — per-call tools()
+chatClient.prompt()
+    .user("...")
+    .tools(callback)
+    .call();
+----
+
+For new code, prefer the declarative `@Tool` annotation — see xref:api/tools.adoc#defining-tools[Defining Tools].
 
 
 
@@ -2519,7 +2667,7 @@ Before 1.0.0-M6:
 - any tool passed via the `functions()` method of the default `FunctionCallingOptions` instance was included in
 each call to the model from that `ChatModel` instance, possibly overwritten by runtime options.
 - any tool passed via the `functionCallbacks()` method of the default `FunctionCallingOptions` instance was only
-made available for runtime dynamic resolution (see xref:api/tools.adoc#_tool_resolution[Tool Resolution]), but never
+made available for runtime dynamic resolution (see xref:api/tools.adoc#tool-resolution[Tool Resolution]), but never
 included in any call to the model unless explicitly requested.
 
 Starting 1.0.0-M6:
@@ -2530,7 +2678,7 @@ possibly overwritten by runtime options. With that, there is consistency in the 
 to the model and prevents any confusion due to a difference in behavior between `functionCallbacks()` and all the other options.
 
 If you want to make a tool available for runtime dynamic resolution and include it in a chat request to the model only
-when explicitly requested, you can use one of the strategies described in xref:api/tools.adoc#_tool_resolution[Tool Resolution].
+when explicitly requested, you can use one of the strategies described in xref:api/tools.adoc#tool-resolution[Tool Resolution].
 
 NOTE: 1.0.0-M6 introduced new APIs for handling tool calling. Backward compatibility is maintained for the old APIs across
 all scenarios, except the one described above. The old APIs are still available, but they are deprecated
@@ -2610,7 +2758,7 @@ On our march to release 1.0.0 M1 we have made several breaking changes.  Apologi
 
 === ChatClient changes
 
-A major change was made that took the 'old' `ChatClient` and moved the functionality into `ChatModel`.  The 'new' `ChatClient` now takes an instance of `ChatModel`. This was done to support a fluent API for creating and executing prompts in a style similar to other client classes in the Spring ecosystem, such as `RestClient`, `WebClient`, and `JdbcClient`.  Refer to the [JavaDoc](https://docs.spring.io/spring-ai/docs/api) for more information on the Fluent API, proper reference documentation is coming shortly.
+A major change was made that took the 'old' `ChatClient` and moved the functionality into `ChatModel`.  The 'new' `ChatClient` now takes an instance of `ChatModel`. This was done to support a fluent API for creating and executing prompts in a style similar to other client classes in the Spring ecosystem, such as `RestClient`, `WebClient`, and `JdbcClient`.  Refer to the https://docs.spring.io/spring-ai/docs/current/api/[JavaDoc] for more information on the Fluent API, proper reference documentation is coming shortly.
 
 We renamed the 'old' `ModelClient` to `Model` and renamed implementing classes, for example `ImageClient` was renamed to `ImageModel`.  The `Model` implementation represents the portability layer that converts between the Spring AI API and the underlying AI Model API.
 
