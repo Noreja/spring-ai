@@ -45,6 +45,7 @@ import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.ai.vectorstore.filter.Filter;
 import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 import org.springframework.util.Assert;
 
@@ -80,6 +81,8 @@ public final class VectorStoreChatMemoryAdvisor implements BaseChatMemoryAdvisor
 
 	private static final int DEFAULT_TOP_K = 20;
 
+	private static final Map<String, String> DEFAULT_CUSTOM_METADATA = Map.of();
+
 	private static final PromptTemplate DEFAULT_SYSTEM_PROMPT_TEMPLATE = new PromptTemplate("""
 			{instructions}
 
@@ -102,17 +105,25 @@ public final class VectorStoreChatMemoryAdvisor implements BaseChatMemoryAdvisor
 
 	private final VectorStore vectorStore;
 
+	private final Map<String, String> customMetaData;
+
+	private final Filter.@Nullable Expression customFilterExpression;
+
 	private VectorStoreChatMemoryAdvisor(PromptTemplate systemPromptTemplate, int defaultTopK, int order,
-			Scheduler scheduler, VectorStore vectorStore) {
+			Scheduler scheduler, VectorStore vectorStore, Map<String, String> customMetaData,
+			Filter.@Nullable Expression customFilterExpression) {
 		Assert.notNull(systemPromptTemplate, "systemPromptTemplate cannot be null");
 		Assert.isTrue(defaultTopK > 0, "topK must be greater than 0");
 		Assert.notNull(scheduler, "scheduler cannot be null");
 		Assert.notNull(vectorStore, "vectorStore cannot be null");
+		Assert.notNull(customMetaData, "customMetaData cannot be null");
 		this.systemPromptTemplate = systemPromptTemplate;
 		this.defaultTopK = defaultTopK;
 		this.order = order;
 		this.scheduler = scheduler;
 		this.vectorStore = vectorStore;
+		this.customMetaData = customMetaData;
+		this.customFilterExpression = customFilterExpression;
 	}
 
 	public static Builder builder(VectorStore chatMemory) {
@@ -134,7 +145,7 @@ public final class VectorStoreChatMemoryAdvisor implements BaseChatMemoryAdvisor
 		String conversationId = getConversationId(request.context());
 		String query = Objects.requireNonNullElse(request.prompt().getUserMessage().getText(), "");
 		int topK = getChatMemoryTopK(request.context());
-		var filter = new FilterExpressionBuilder().eq(DOCUMENT_METADATA_CONVERSATION_ID, conversationId).build();
+		var filter = aggregateFilterExpression(conversationId);
 		SearchRequest searchRequest = SearchRequest.builder().query(query).topK(topK).filterExpression(filter).build();
 		List<Document> documents = this.vectorStore.similaritySearch(searchRequest);
 
@@ -158,6 +169,27 @@ public final class VectorStoreChatMemoryAdvisor implements BaseChatMemoryAdvisor
 		}
 
 		return processedChatClientRequest;
+	}
+
+	/**
+	 * Aggregates a filter expression by creating a conjunction (AND) of a
+	 * conversation-specific filter and an optional predefined custom filter expression.
+	 * @param conversationId the identifier of the conversation used to construct the
+	 * filter expression
+	 * @return a composite {@link Filter.Expression} representing the aggregated filter
+	 * criteria
+	 */
+	private Filter.Expression aggregateFilterExpression(String conversationId) {
+		Filter.Expression conversationExpression = new FilterExpressionBuilder()
+			.eq(DOCUMENT_METADATA_CONVERSATION_ID, conversationId)
+			.build();
+		if (this.customFilterExpression == null) {
+			return conversationExpression;
+		}
+		return new FilterExpressionBuilder()
+			.and(new FilterExpressionBuilder.Op(conversationExpression),
+					new FilterExpressionBuilder.Op(this.customFilterExpression))
+			.build();
 	}
 
 	private int getChatMemoryTopK(Map<String, @Nullable Object> context) {
@@ -217,6 +249,7 @@ public final class VectorStoreChatMemoryAdvisor implements BaseChatMemoryAdvisor
 						message.getMetadata() != null ? message.getMetadata() : new HashMap<>());
 				metadata.put(DOCUMENT_METADATA_CONVERSATION_ID, conversationId);
 				metadata.put(DOCUMENT_METADATA_MESSAGE_TYPE, message.getMessageType().name());
+				metadata.putAll(this.customMetaData);
 				if (message instanceof UserMessage userMessage) {
 					return Document.builder()
 						.text(userMessage.getText())
@@ -249,6 +282,10 @@ public final class VectorStoreChatMemoryAdvisor implements BaseChatMemoryAdvisor
 		private int order = Advisor.DEFAULT_CHAT_MEMORY_PRECEDENCE_ORDER;
 
 		private final VectorStore vectorStore;
+
+		private Map<String, String> customMetaData = DEFAULT_CUSTOM_METADATA;
+
+		private Filter.@Nullable Expression customFilterExpression = null;
 
 		/**
 		 * Creates a new builder instance.
@@ -294,12 +331,33 @@ public final class VectorStoreChatMemoryAdvisor implements BaseChatMemoryAdvisor
 		}
 
 		/**
+		 * Set custom metadata to attach to every stored memory {@link Document}.
+		 * @param customMetaData the custom metadata
+		 * @return this builder
+		 */
+		public Builder customMetaData(Map<String, String> customMetaData) {
+			this.customMetaData = customMetaData;
+			return this;
+		}
+
+		/**
+		 * Set an additional filter expression AND-combined with the conversation-id
+		 * filter when retrieving memory.
+		 * @param customFilterExpression the custom filter expression
+		 * @return this builder
+		 */
+		public Builder customFilterExpression(Filter.Expression customFilterExpression) {
+			this.customFilterExpression = customFilterExpression;
+			return this;
+		}
+
+		/**
 		 * Build the advisor.
 		 * @return the advisor
 		 */
 		public VectorStoreChatMemoryAdvisor build() {
 			return new VectorStoreChatMemoryAdvisor(this.systemPromptTemplate, this.defaultTopK, this.order,
-					this.scheduler, this.vectorStore);
+					this.scheduler, this.vectorStore, this.customMetaData, this.customFilterExpression);
 		}
 
 	}
