@@ -388,6 +388,7 @@ public final class AnthropicChatModel implements ChatModel, StreamingChatModel {
 				RedactedThinkingBlock redactedBlock = contentBlock.asRedactedThinking();
 				Map<String, Object> redactedProperties = new HashMap<>();
 				redactedProperties.put("data", redactedBlock.data());
+				redactedProperties.put("reasoning", Boolean.TRUE);
 				AssistantMessage assistantMessage = AssistantMessage.builder().properties(redactedProperties).build();
 				return new ChatResponse(List.of(new Generation(assistantMessage)));
 			}
@@ -430,6 +431,7 @@ public final class AnthropicChatModel implements ChatModel, StreamingChatModel {
 				String thinkingText = delta.asThinking().thinking();
 				Map<String, Object> thinkingProperties = new HashMap<>();
 				thinkingProperties.put("thinking", Boolean.TRUE);
+				thinkingProperties.put("reasoning", Boolean.TRUE);
 				AssistantMessage assistantMessage = AssistantMessage.builder()
 					.content(thinkingText)
 					.properties(thinkingProperties)
@@ -442,6 +444,7 @@ public final class AnthropicChatModel implements ChatModel, StreamingChatModel {
 				String signature = delta.asSignature().signature();
 				Map<String, Object> signatureProperties = new HashMap<>();
 				signatureProperties.put("signature", signature);
+				signatureProperties.put("reasoning", Boolean.TRUE);
 				AssistantMessage assistantMessage = AssistantMessage.builder().properties(signatureProperties).build();
 				return new ChatResponse(List.of(new Generation(assistantMessage)));
 			}
@@ -990,6 +993,7 @@ public final class AnthropicChatModel implements ChatModel, StreamingChatModel {
 				ThinkingBlock thinkingBlock = block.asThinking();
 				Map<String, Object> thinkingProperties = new HashMap<>();
 				thinkingProperties.put("signature", thinkingBlock.signature());
+				thinkingProperties.put("reasoning", Boolean.TRUE);
 				generations.add(new Generation(AssistantMessage.builder()
 					.content(thinkingBlock.thinking())
 					.properties(thinkingProperties)
@@ -1000,6 +1004,7 @@ public final class AnthropicChatModel implements ChatModel, StreamingChatModel {
 				RedactedThinkingBlock redactedBlock = block.asRedactedThinking();
 				Map<String, Object> redactedProperties = new HashMap<>();
 				redactedProperties.put("data", redactedBlock.data());
+				redactedProperties.put("reasoning", Boolean.TRUE);
 				generations.add(new Generation(AssistantMessage.builder().properties(redactedProperties).build(),
 						generationMetadata));
 			}
