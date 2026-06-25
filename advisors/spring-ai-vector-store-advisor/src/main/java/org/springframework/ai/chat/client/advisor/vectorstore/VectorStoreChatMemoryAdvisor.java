@@ -23,6 +23,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor;
 import org.jspecify.annotations.Nullable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -221,13 +223,29 @@ public final class VectorStoreChatMemoryAdvisor implements BaseChatMemoryAdvisor
 			StreamAdvisorChain streamAdvisorChain) {
 		// Get the scheduler from BaseAdvisor
 		Scheduler scheduler = this.getScheduler();
-		// Process the request with the before method
-		return Mono.just(chatClientRequest)
-			.publishOn(scheduler)
-			.map(request -> this.before(request, streamAdvisorChain))
-			.flatMapMany(streamAdvisorChain::nextStream)
-			.transform(flux -> new ChatClientMessageAggregator().aggregateChatClientResponse(flux,
-					response -> this.after(response, streamAdvisorChain)));
+		// before()/after() run on the scheduler (boundedElastic) after publishOn.
+		// Re-establish
+		// the parent observation's scope around them so the similarity-search embedding
+		// (before)
+		// and the memory-write embedding (after) nest under the request trace instead of
+		// starting
+		// a new root trace. Mirrors DefaultChatClient / BaseAdvisor.
+		return Flux.deferContextual(contextView -> {
+			Observation parentObservation = contextView.getOrDefault(ObservationThreadLocalAccessor.KEY, null);
+			return Mono.just(chatClientRequest).publishOn(scheduler).map(request -> {
+				try (Observation.Scope ignored = parentObservation != null ? parentObservation.openScope()
+						: Observation.Scope.NOOP) {
+					return this.before(request, streamAdvisorChain);
+				}
+			})
+				.flatMapMany(streamAdvisorChain::nextStream)
+				.transform(flux -> new ChatClientMessageAggregator().aggregateChatClientResponse(flux, response -> {
+					try (Observation.Scope ignored = parentObservation != null ? parentObservation.openScope()
+							: Observation.Scope.NOOP) {
+						this.after(response, streamAdvisorChain);
+					}
+				}));
+		});
 	}
 
 	private static String escapeXml(@Nullable String text) {
