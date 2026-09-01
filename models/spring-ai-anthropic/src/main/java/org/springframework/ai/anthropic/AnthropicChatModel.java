@@ -1552,7 +1552,8 @@ public final class AnthropicChatModel implements ChatModel, StreamingChatModel {
 			String id = this.currentToolId.get();
 			String name = this.currentToolName.get();
 			if (!id.isEmpty() && !name.isEmpty()) {
-				String arguments = this.currentToolJsonAccumulator.toString();
+				String accumulated = this.currentToolJsonAccumulator.toString();
+				String arguments = accumulated.isBlank() ? "{}" : accumulated;
 				this.completedToolCalls.add(new ToolCall(id, "function", name, arguments));
 			}
 			// Reset current tool state (use empty string as "not tracking" sentinel)
