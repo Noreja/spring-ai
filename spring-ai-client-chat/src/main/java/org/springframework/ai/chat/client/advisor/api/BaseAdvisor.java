@@ -16,6 +16,8 @@
 
 package org.springframework.ai.chat.client.advisor.api;
 
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
@@ -60,17 +62,29 @@ public interface BaseAdvisor extends CallAdvisor, StreamAdvisor {
 		Assert.notNull(streamAdvisorChain, "streamAdvisorChain cannot be null");
 		Assert.notNull(getScheduler(), "scheduler cannot be null");
 
-		Flux<ChatClientResponse> chatClientResponseFlux = Mono.just(chatClientRequest)
-			.publishOn(getScheduler())
-			.map(request -> this.before(request, streamAdvisorChain))
-			.flatMapMany(streamAdvisorChain::nextStream);
+		return Flux.deferContextual(contextView -> {
+			Observation parentObservation = contextView.getOrDefault(ObservationThreadLocalAccessor.KEY, null);
 
-		return chatClientResponseFlux.map(response -> {
-			if (AdvisorUtils.onFinishReason().test(response)) {
-				response = after(response, streamAdvisorChain);
-			}
-			return response;
-		}).onErrorResume(error -> Flux.error(new IllegalStateException("Stream processing failed", error)));
+			Flux<ChatClientResponse> chatClientResponseFlux = Mono.just(chatClientRequest)
+				.publishOn(getScheduler())
+				.map(request -> {
+					try (Observation.Scope ignored = parentObservation != null ? parentObservation.openScope()
+							: Observation.Scope.NOOP) {
+						return this.before(request, streamAdvisorChain);
+					}
+				})
+				.flatMapMany(streamAdvisorChain::nextStream);
+
+			return chatClientResponseFlux.map(response -> {
+				if (AdvisorUtils.onFinishReason().test(response)) {
+					try (Observation.Scope ignored = parentObservation != null ? parentObservation.openScope()
+							: Observation.Scope.NOOP) {
+						response = after(response, streamAdvisorChain);
+					}
+				}
+				return response;
+			}).onErrorResume(error -> Flux.error(new IllegalStateException("Stream processing failed", error)));
+		});
 	}
 
 	@Override

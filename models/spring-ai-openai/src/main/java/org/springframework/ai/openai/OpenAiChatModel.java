@@ -224,7 +224,7 @@ public final class OpenAiChatModel implements ChatModel {
 					return new ChatResponse(List.of());
 				}
 
-				List<Generation> generations = choices.stream().map(choice -> {
+				List<Generation> generations = choices.stream().flatMap(choice -> {
 					Map<String, Object> metadata = Map.of("id", chatCompletion.id(), "role",
 							choice.message()._role().asString().isPresent() ? choice.message()._role().asStringOrThrow()
 									: "",
@@ -232,7 +232,7 @@ public final class OpenAiChatModel implements ChatModel {
 							"refusal", choice.message().refusal().orElse(""), "annotations",
 							choice.message().annotations().orElse((List) List.of(Map.of())), REASONING_CONTENT,
 							getReasoningContent(choice));
-					return buildGeneration(choice, metadata, request);
+					return buildGenerations(choice, metadata, request).stream();
 				}).toList();
 
 				// Current usage
@@ -320,7 +320,7 @@ public final class OpenAiChatModel implements ChatModel {
 
 			Flux<ChatResponse> chatResponses = aggregatedChatCompletions.map(chatCompletion -> {
 				String id = chatCompletion.id();
-				List<Generation> generations = chatCompletion.choices().stream().map(choice -> {
+				List<Generation> generations = chatCompletion.choices().stream().flatMap(choice -> {
 					roleMap.putIfAbsent(id, choice.message()._role().asString().isPresent()
 							? choice.message()._role().asStringOrThrow() : "");
 
@@ -333,7 +333,7 @@ public final class OpenAiChatModel implements ChatModel {
 							REASONING_CONTENT, getReasoningContent(choice) //
 					);
 
-					return buildGeneration(choice, metadata, request);
+					return buildGenerations(choice, metadata, request).stream();
 				}).toList();
 				Optional<CompletionUsage> usage = chatCompletion.usage();
 				CompletionUsage usageVal = usage.orElse(null);
@@ -350,6 +350,34 @@ public final class OpenAiChatModel implements ChatModel {
 			return new MessageAggregator().aggregate(observedResponses, observationContext::setResponse);
 
 		});
+	}
+
+	/**
+	 * Build the list of {@link Generation}s for a single {@link ChatCompletion.Choice}.
+	 * When the message carries reasoning content (e.g. from a vLLM server started with
+	 * {@code --reasoning-parser}, or any OpenAI-compatible API that surfaces
+	 * {@code reasoning_content}), it is emitted as its own Generation tagged with
+	 * {@code properties["reasoning"] = TRUE}, placed before the assistant-text
+	 * Generation. This mirrors Anthropic's separate-Generation pattern for thinking
+	 * blocks so consumers can classify generations cross-provider via a single property
+	 * key.
+	 */
+	private List<Generation> buildGenerations(ChatCompletion.Choice choice, Map<String, Object> metadata,
+			ChatCompletionCreateParams request) {
+		List<Generation> generations = new ArrayList<>(2);
+		String reasoningContent = getReasoningContent(choice);
+		if (StringUtils.hasText(reasoningContent)) {
+			Map<String, Object> reasoningProperties = new HashMap<>(metadata);
+			reasoningProperties.put("reasoning", Boolean.TRUE);
+			AssistantMessage reasoningMessage = AssistantMessage.builder()
+				.content(reasoningContent)
+				.properties(reasoningProperties)
+				.build();
+			generations.add(new Generation(reasoningMessage,
+					ChatGenerationMetadata.builder().finishReason(choice.finishReason().value().name()).build()));
+		}
+		generations.add(buildGeneration(choice, metadata, request));
+		return generations;
 	}
 
 	private Generation buildGeneration(ChatCompletion.Choice choice, Map<String, Object> metadata,
