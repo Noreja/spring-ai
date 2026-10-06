@@ -738,8 +738,12 @@ public class OpenAiResponsesModel implements ChatModel {
 	}
 
 	private DefaultUsage toUsage(ResponseUsage usage) {
+		Long cacheRead = usage._inputTokensDetails()
+			.asKnown()
+			.flatMap(details -> details._cachedTokens().asKnown())
+			.orElse(null);
 		return new DefaultUsage(Math.toIntExact(usage.inputTokens()), Math.toIntExact(usage.outputTokens()),
-				Math.toIntExact(usage.totalTokens()), usage);
+				Math.toIntExact(usage.totalTokens()), usage, cacheRead, null);
 	}
 
 	private String mediaToText(Media media) {
