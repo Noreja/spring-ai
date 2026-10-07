@@ -425,12 +425,15 @@ public class OpenAiResponsesModel implements ChatModel {
 
 		// Convert messages to input items
 		List<ResponseInputItem> inputItems = new ArrayList<>();
-		String systemInstructions = null;
+		List<String> systemTexts = new ArrayList<>();
 
 		for (var message : prompt.getInstructions()) {
 			if (message.getMessageType() == MessageType.SYSTEM) {
-				// Responses API uses instructions field for system messages
-				systemInstructions = message.getText();
+				// The Responses API has one instructions field, so every system message
+				// goes into it in order, as the Anthropic model joins its system blocks
+				if (StringUtils.hasText(message.getText())) {
+					systemTexts.add(message.getText());
+				}
 			}
 			else if (message.getMessageType() == MessageType.USER) {
 				List<ResponseInputContent> contentParts = new ArrayList<>();
@@ -525,6 +528,7 @@ public class OpenAiResponsesModel implements ChatModel {
 		builder.inputOfResponse(inputItems);
 
 		// Set instructions (system message)
+		String systemInstructions = systemTexts.isEmpty() ? null : String.join("\n\n", systemTexts);
 		if (requestOptions.getInstructions() != null) {
 			builder.instructions(requestOptions.getInstructions());
 		}
